@@ -135,8 +135,8 @@ struct traits<xpp::cursor<Connection, Interfaces ...>>
   typedef xcb_cursor_t type;
 };
 
-}; // namespace generic
+} // namespace generic
 
-}; // namespace xpp
+} // namespace xpp
 
 #endif // XPP_CURSOR_HPP

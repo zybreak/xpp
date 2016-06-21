@@ -83,8 +83,8 @@ struct traits<xpp::window<Connection, Interfaces ...>>
   typedef xcb_window_t type;
 };
 
-}; // namespace generic
+} // namespace generic
 
-}; // namespace xpp
+} // namespace xpp
 
 #endif // XPP_WINDOW_HPP

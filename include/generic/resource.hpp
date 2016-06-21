@@ -33,7 +33,7 @@ class interfaces
     }
 }; // class interfaces
 
-};
+}
 
 template<typename Connection, typename ResourceId,
          template<typename, typename> class ... Interfaces>
@@ -135,8 +135,8 @@ operator<<(std::ostream & os,
   return os << std::hex << "0x" << *resource << std::dec;
 }
 
-}; // namespace generic
+} // namespace generic
 
-}; // namespace xpp
+} // namespace xpp
 
 #endif // XPP_GENERIC_RESOURCE_HPP

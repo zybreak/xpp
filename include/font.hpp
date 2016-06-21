@@ -67,8 +67,8 @@ struct traits<xpp::font<Connection, Interfaces ...>>
   typedef xcb_font_t type;
 };
 
-}; // namespace generic
+} // namespace generic
 
-}; // namespace xpp
+} // namespace xpp
 
 #endif // XPP_FONT_HPP

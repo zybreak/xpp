@@ -20,7 +20,7 @@ class dispatcher {
   public:
     virtual ~dispatcher(void) {}
     template<typename Event> void dispatch(const Event & e);
-}; // namespace dispatcher
+}; // class dispatcher
 
 template<typename Event>
 class sink : virtual public dispatcher
@@ -30,7 +30,7 @@ class sink : virtual public dispatcher
     virtual void handle(const Event &) = 0;
 };
 
-}; // namespace detail
+} // namespace detail
 
 template<typename Event, typename ... Events>
 class sink
@@ -194,9 +194,9 @@ class registry
 
 }; // xpp::event::source
 
-}; // namespace event
+} // namespace event
 
-}; // namespace xpp
+} // namespace xpp
 
 template<typename Event>
 void xpp::event::detail::dispatcher::dispatch(const Event & e)

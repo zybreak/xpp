@@ -1,5 +1,5 @@
 all:
-	${MAKE} -C src/proto
+	${MAKE} -C include/proto
 
 examples:
 	${MAKE} -C src/examples

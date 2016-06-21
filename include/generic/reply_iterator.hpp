@@ -331,8 +331,8 @@ class list {
     }
 }; // class list
 
-}; // namespace generic
+} // namespace generic
 
-}; // namespace xpp
+} // namespace xpp
 
 #endif // XPP_GENERIC_REPLY_ITERATOR_HPP

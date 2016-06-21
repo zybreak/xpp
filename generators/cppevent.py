@@ -69,7 +69,7 @@ class dispatcher
 %s\
 }; // class dispatcher
 
-}; // namespace event
+} // namespace event
 '''
 
 def _event_dispatcher_class(typedef, ctors, switch, members, has_events):
@@ -360,7 +360,7 @@ class %s
 %s\
 }; // class %s
 %s\
-}; // namespace event
+} // namespace event
 ''' % (self.get_name(), # class %s
        self.c_name, # %s>
        typedef,

@@ -35,7 +35,7 @@ PROTOS= \
 
 PYTHON=python2
 CLIENT=cpp_client.py
-XCBGEN=/usr/lib/python3.3/site-packages
+XCBGEN=/usr/lib/python2.7/site-packages
 PROTODIR=/usr/share/xcb
 XMLPROTOS=$(PROTOS:%=%.xml)
 HPPPROTOS=$(XMLPROTOS:%.xml=%.hpp)

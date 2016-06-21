@@ -54,6 +54,6 @@ class extension
     const xcb_query_extension_reply_t * m_extension = nullptr;
 }; // class extension
 
-}; }; // namespace xpp::generic
+} } // namespace xpp::generic
 
 #endif // XPP_GENERIC_EXTENSION_HPP

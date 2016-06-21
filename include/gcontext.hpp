@@ -107,8 +107,8 @@ struct traits<xpp::gcontext<Connection, Interfaces ...>>
   typedef xcb_gcontext_t type;
 };
 
-}; // namespace generic
+} // namespace generic
 
-}; // namespace xpp
+} // namespace xpp
 
 #endif // XPP_GCONTEXT_HPP

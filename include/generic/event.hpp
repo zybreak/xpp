@@ -40,6 +40,6 @@ class event {
     std::shared_ptr<xcb_generic_event_t> m_event;
 }; // class event
 
-}; }; // namespace xpp::generic
+} } // namespace xpp::generic
 
 #endif // XPP_GENERIC_EVENT_HPP

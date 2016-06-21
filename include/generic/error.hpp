@@ -33,7 +33,7 @@ dispatch(const Object &,
   throw error;
 }
 
-}; // namespace detail
+} // namespace detail
 
 template<typename Object>
 void
@@ -91,6 +91,6 @@ class error
     std::shared_ptr<xcb_generic_error_t> m_error;
 }; // class error
 
-}; }; // xpp::generic
+} } // xpp::generic
 
 #endif // XPP_GENERIC_ERROR_HPP

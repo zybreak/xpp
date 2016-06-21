@@ -71,8 +71,8 @@ struct traits<xpp::pixmap<Connection, Interfaces ...>>
   typedef xcb_pixmap_t type;
 };
 
-}; // namespace generic
+} // namespace generic
 
-}; // namespace xpp
+} // namespace xpp
 
 #endif // XPP_PIXMAP_HPP

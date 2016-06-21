@@ -124,6 +124,6 @@ class reply<Derived,
     }
 };
 
-}; }; // namespace xpp::generic
+} } // namespace xpp::generic
 
 #endif // XPP_GENERIC_REQUEST_HPP

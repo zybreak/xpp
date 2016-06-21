@@ -28,8 +28,8 @@ struct traits<xpp::fontable<Connection, Interfaces ...>>
   typedef xcb_fontable_t type;
 };
 
-}; // namespace generic
+} // namespace generic
 
-}; // namespace xpp
+} // namespace xpp
 
 #endif // XPP_FONTABLE_HPP

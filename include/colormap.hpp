@@ -70,8 +70,8 @@ struct traits<xpp::colormap<Connection, Interfaces ...>>
   typedef xcb_colormap_t type;
 };
 
-}; // namespace generic
+} // namespace generic
 
-}; // namespace xpp
+} // namespace xpp
 
 #endif // XPP_COLORMAP_HPP

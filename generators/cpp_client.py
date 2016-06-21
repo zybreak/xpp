@@ -263,7 +263,7 @@ def c_close(self):
 
     _h('')
     # _h('}; // namespace xpp')
-    _h("}; }; // namespace xpp::%s" % get_namespace(_ns))
+    _h("} } // namespace xpp::%s" % get_namespace(_ns))
 
     _h('')
     _h('#endif // XPP_%s_HPP', get_namespace(_ns).upper())
@@ -1457,7 +1457,7 @@ def _c_accessor_get_length(expr, field_mapping=None):
 
     lenfield_name = expr.lenfield_name
     if lenfield_name is not None:
-        if field_mapping is not None:
+        if field_mapping is not None and lenfield_name in field_mapping:
             lenfield_name = field_mapping[lenfield_name][0]
 
     if expr.lenfield is not None and expr.lenfield.prev_varsized_field is not None:
@@ -1655,6 +1655,10 @@ def _c_accessors_list(self, field):
         length = _c_accessor_get_expr(field.type.expr, fields)
 
     request_name = _ext(_n_item(self.name[-1]))
+
+    if not request_name in _cpp_request_objects:
+        # print >> sys.stderr, 'WARN: Skipping undefined _cpp_request_object %s' % (request_name,)
+        return
 
     if list.member.fixed_size() and not self.is_bitcase:
         if field.c_field_type == "char":
@@ -3051,7 +3055,7 @@ def cpp_prototypes():
     _h("namespace request {")
     for request in _request_classes:
         _h("  class %s;", request)
-    _h("}; // namespace request")
+    _h("} // namespace request")
     _h("")
 
     def ctor(name, type):

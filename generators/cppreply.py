@@ -36,23 +36,23 @@ class %s
 %s\
 }; // class %s
 
-}; // namespace detail
+} // namespace detail
 
 namespace checked {
 template<typename Connection>
 using %s = detail::%s<
     Connection, xpp::generic::checked_tag,
     SIGNATURE(%s)>;
-}; // namespace checked
+} // namespace checked
 
 namespace unchecked {
 template<typename Connection>
 using %s = detail::%s<
     Connection, xpp::generic::unchecked_tag,
     SIGNATURE(%s_unchecked)>;
-}; // namespace unchecked
+} // namespace unchecked
 
-}; // namespace reply
+} // namespace reply
 '''
 
 def _reply_class(name, c_name, ns, cookie, accessors):

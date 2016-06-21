@@ -28,8 +28,8 @@ struct traits<xpp::drawable<Connection, Interfaces ...>>
   typedef xcb_drawable_t type;
 };
 
-}; // namespace generic
+} // namespace generic
 
-}; // namespace xpp
+} // namespace xpp
 
 #endif // XPP_DRAWABLE_HPP

@@ -17,8 +17,8 @@ struct conversion_type
   using type = typename traits<Object>::type;
 };
 
-}; // namespace generic
+} // namespace generic
 
-};
+}
 
 #endif // XPP_GENERIC_ITERATOR_TRAITS_HPP

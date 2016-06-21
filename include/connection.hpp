@@ -23,7 +23,7 @@ class interfaces
     }
 }; // class interfaces
 
-}; // namespace detail
+} // namespace detail
 
 template<typename ... Extensions>
 class connection
@@ -152,6 +152,6 @@ connection<>::connection(Parameters && ... parameters)
   m_root_window = screen_of_display(static_cast<core &>(*this).default_screen())->root;
 }
 
-}; // namespace xpp
+} // namespace xpp
 
 #endif // XPP_CONNECTION_HPP

@@ -26,7 +26,7 @@ class dispatcher
 %s\
 }; // class dispatcher
 
-}; // namespace error
+} // namespace error
 '''
 
 def _error_dispatcher_class(typedef, ctors, switch, members, has_errors):
@@ -128,7 +128,7 @@ class CppError(object):
         for name in self.names[0:-1]:
             if name in _reserved_keywords: name += "_"
             self.nssopen += " namespace %s {" % name
-            self.nssclose += " };"
+            self.nssclose += " }"
             self.scope.append(name)
 
     def get_name(self):
@@ -208,7 +208,7 @@ class %s
     }
 %s\
 }; // class %s
-}; // namespace error
+} // namespace error
 ''' % (self.get_name(), # class %s
        self.get_name(), # : public xpp::generic::error<%s,
        self.c_name, # %s>

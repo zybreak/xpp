@@ -85,8 +85,8 @@ class make
     >::type
 {};
 
-}; // namespace factory
+} // namespace factory
 
-}; }; // xpp::generic
+} } // xpp::generic
 
 #endif // XPP_GENERIC_FACTORY_HPP

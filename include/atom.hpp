@@ -27,8 +27,8 @@ struct traits<xpp::atom<Connection, Interfaces ...>>
   typedef xcb_atom_t type;
 };
 
-}; // namespace generic
+} // namespace generic
 
-}; // namespace xpp
+} // namespace xpp
 
 #endif // XPP_ATOM_HPP
