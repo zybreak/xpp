@@ -85,13 +85,15 @@ endforeach(PROTO_RAW)
 file(GLOB HEADER_FILES include/*.hpp)
 add_library(${PROJECT_NAME} ${HEADER_FILES})
 
+set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 14)
+set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)
+
 target_include_directories(${PROJECT_NAME} PUBLIC
   ${PROJECT_SOURCE_DIR}/include
   ${X11_INCLUDE_DIRS}
   ${X11_XCB_INCLUDE_DIR}
   ${XCB_XCB_INCLUDE_DIR})
 
-target_compile_options(${PROJECT_NAME} PUBLIC $<$<COMPILE_LANGUAGE:CXX>:-std=c++14>)
 target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wpedantic)
 target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Debug>:-g3 -DDEBUG>)
 target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Release>:-O3 -Wno-unused-variable>)
