@@ -14,6 +14,23 @@ find_package(X11 REQUIRED)
 find_package(X11_XCB REQUIRED)
 find_package(XCB REQUIRED)
 
+if(NOT PYTHON_EXECUTABLE)
+  message(FATAL_ERROR "Missing PYTHON_EXECUTABLE")
+endif()
+
+#
+# Locate the python module "xcbgen"
+#
+execute_process(COMMAND "${PYTHON_EXECUTABLE}" "-c"
+  "import re,xcbgen;print re.compile('/xcbgen/__init__.py.*').sub('',xcbgen.__file__)"
+  RESULT_VARIABLE _xcbgen_status
+  OUTPUT_VARIABLE _xcbgen_location
+  ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+set(PYTHON_XCBGEN "${_xcbgen_location}" CACHE STRING "Location of python module: xcbgen ")
+if(NOT PYTHON_XCBGEN)
+  message(FATAL_ERROR "Missing required python module: xcbgen")
+endif()
+
 set(XPP_INCLUDE_DIRS
   ${X11_INCLUDE_DIRS}
   ${X11_XCB_INCLUDE_DIR}
@@ -110,9 +127,7 @@ foreach(PROTO ${PROTO_LIST})
   string(REGEX REPLACE "proto\$" "" PROTO_OUTPUT ${PROTO})
   add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
     # FIXME: Find replacement for the hardcoded paths
-    COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/generators/cpp_client.py
-      -p /usr/lib/python2.7/site-packages
-      -p /usr/lib/python2.7/dist-packages
+    COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/generators/cpp_client.py -p "${PYTHON_XCBGEN}"
       /usr/share/xcb/${PROTO}.xml > ${PROJECT_SOURCE_DIR}/include/proto/${PROTO_OUTPUT}.hpp)
 endforeach(PROTO)
 
