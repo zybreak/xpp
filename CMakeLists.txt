@@ -12,11 +12,26 @@ pkg_check_modules(XCBPROTO REQUIRED xcb-proto)
 find_package(PythonInterp 2.7 REQUIRED)
 find_package(X11 REQUIRED)
 find_package(X11_XCB REQUIRED)
-find_package(XCB REQUIRED)
+find_package(XCB REQUIRED ICCCM EWMH UTIL)
 
 if(NOT PYTHON_EXECUTABLE)
   message(FATAL_ERROR "Missing PYTHON_EXECUTABLE")
 endif()
+
+set(XPP_INCLUDE_DIRS
+  ${X11_INCLUDE_DIRS}
+  ${X11_XCB_INCLUDE_DIR}
+  ${XCB_XCB_INCLUDE_DIR}
+  ${XCB_EWMH_INCLUDE_DIR}
+  ${XCB_ICCCM_INCLUDE_DIR}
+  ${XCB_UTIL_INCLUDE_DIR})
+set(XPP_LIBRARIES
+  ${X11_X11_LIB}
+  ${X11_XCB_LIBRARIES}
+  ${XCB_XCB_LIBRARY}
+  ${XCB_EWMH_LIBRARY}
+  ${XCB_ICCCM_LIBRARY}
+  ${XCB_UTIL_LIBRARY})
 
 #
 # Loop through a hardcoded list of python executables to locate the python module "xcbgen"
@@ -42,15 +57,6 @@ endforeach(CURRENT_EXECUTABLE)
 if(NOT PYTHON_XCBGEN)
   message(FATAL_ERROR "Missing required python module: xcbgen")
 endif()
-
-set(XPP_INCLUDE_DIRS
-  ${X11_INCLUDE_DIRS}
-  ${X11_XCB_INCLUDE_DIR}
-  ${XCB_XCB_INCLUDE_DIR})
-set(XPP_LIBRARIES
-  ${X11_X11_LIB}
-  ${X11_XCB_LIBRARIES}
-  ${XCB_XCB_LIBRARY})
 
 #
 # Include XCB libs depending on what protos we build
@@ -87,9 +93,16 @@ if(NOT XCB_PROTOS)
     "xv"
     "xvmc")
 endif()
+
 if(";${XCB_PROTOS};" MATCHES ";randr;")
+  find_package(XCB REQUIRED RANDR)
   set(XPP_INCLUDE_DIRS ${XPP_INCLUDE_DIRS} ${XCB_RANDR_INCLUDE_DIR})
   set(XPP_LIBRARIES ${XPP_LIBRARIES} ${XCB_RANDR_LIBRARY})
+endif()
+if(";${XCB_PROTOS};" MATCHES ";damage;")
+  find_package(XCB REQUIRED DAMAGE)
+  set(XPP_INCLUDE_DIRS ${XPP_INCLUDE_DIRS} ${XCB_DAMAGE_INCLUDE_DIR})
+  set(XPP_LIBRARIES ${XPP_LIBRARIES} ${XCB_DAMAGE_LIBRARY})
 endif()
 
 set(PROTO_LIST)
