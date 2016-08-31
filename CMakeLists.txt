@@ -22,7 +22,7 @@ endif()
 # Locate the python module "xcbgen"
 #
 execute_process(COMMAND "${PYTHON_EXECUTABLE}" "-c"
-  "import re,xcbgen;print re.compile('/xcbgen/__init__.py.*').sub('',xcbgen.__file__)"
+  "import re,xcbgen;print(re.compile('/xcbgen/__init__.py.*').sub('',xcbgen.__file__))"
   RESULT_VARIABLE _xcbgen_status
   OUTPUT_VARIABLE _xcbgen_location
   ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
