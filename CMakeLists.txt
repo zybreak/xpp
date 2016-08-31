@@ -19,14 +19,26 @@ if(NOT PYTHON_EXECUTABLE)
 endif()
 
 #
-# Locate the python module "xcbgen"
+# Loop through a hardcoded list of python executables to locate the python module "xcbgen"
 #
-execute_process(COMMAND "${PYTHON_EXECUTABLE}" "-c"
-  "import re,xcbgen;print(re.compile('/xcbgen/__init__.py.*').sub('',xcbgen.__file__))"
-  RESULT_VARIABLE _xcbgen_status
-  OUTPUT_VARIABLE _xcbgen_location
-  ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
-set(PYTHON_XCBGEN "${_xcbgen_location}" CACHE STRING "Location of python module: xcbgen ")
+foreach(CURRENT_EXECUTABLE python2 python3 python)
+  message(STATUS "Searching for xcbgen with " ${CURRENT_EXECUTABLE})
+
+  execute_process(COMMAND "${CURRENT_EXECUTABLE}" "-c"
+    "import re,xcbgen;print(re.compile('/xcbgen/__init__.py.*').sub('',xcbgen.__file__))"
+    RESULT_VARIABLE _xcbgen_status
+    OUTPUT_VARIABLE _xcbgen_location
+    ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+  # When a shell script returns successfully its return code is 0
+  if(_xcbgen_status EQUAL 0)
+    set(PYTHON_XCBGEN "${_xcbgen_location}" CACHE STRING "Location of python module: xcbgen ")
+    message(STATUS "Found xcbgen in " ${PYTHON_XCBGEN})
+    break()
+  endif()
+
+endforeach(CURRENT_EXECUTABLE)
+
 if(NOT PYTHON_XCBGEN)
   message(FATAL_ERROR "Missing required python module: xcbgen")
 endif()
@@ -128,7 +140,7 @@ foreach(PROTO ${PROTO_LIST})
   add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
     # FIXME: Find replacement for the hardcoded paths
     COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/generators/cpp_client.py -p "${PYTHON_XCBGEN}"
-      /usr/share/xcb/${PROTO}.xml > ${PROJECT_SOURCE_DIR}/include/proto/${PROTO_OUTPUT}.hpp)
+    /usr/share/xcb/${PROTO}.xml > ${PROJECT_SOURCE_DIR}/include/proto/${PROTO_OUTPUT}.hpp)
 endforeach(PROTO)
 
 #
