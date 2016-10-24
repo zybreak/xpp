@@ -19,6 +19,7 @@ if(NOT PYTHON_EXECUTABLE)
 endif()
 
 set(XPP_INCLUDE_DIRS
+  ${PROJECT_SOURCE_DIR}/include
   ${X11_INCLUDE_DIRS}
   ${X11_XCB_INCLUDE_DIR}
   ${XCB_XCB_INCLUDE_DIR}
@@ -129,26 +130,20 @@ endforeach(PROTO_RAW)
 #
 # Create project lib and commands
 #
-file(GLOB HEADER_FILES include/*.hpp)
+file(GLOB_RECURSE HEADER_FILES ${PROJECT_SOURCE_DIR}/include/*.hpp)
 add_library(${PROJECT_NAME} ${HEADER_FILES})
 
-set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 14)
-set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD_REQUIRED ON)
+target_include_directories(${PROJECT_NAME} PUBLIC ${XPP_INCLUDE_DIRS})
+target_include_directories(${PROJECT_NAME} PRIVATE ${PROJECT_SOURCE_DIR}/include/xpp)
+target_link_libraries(${PROJECT_NAME} PRIVATE ${XPP_LIBRARIES})
 
-target_include_directories(${PROJECT_NAME} PUBLIC
-  ${PROJECT_SOURCE_DIR}/include
-  ${X11_INCLUDE_DIRS}
-  ${X11_XCB_INCLUDE_DIR}
-  ${XCB_XCB_INCLUDE_DIR})
-
-target_compile_options(${PROJECT_NAME} PRIVATE -Wall -Wpedantic)
+target_compile_options(${PROJECT_NAME} PRIVATE -std=c++14 -Wall -Wpedantic)
 target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Debug>:-g3 -DDEBUG>)
 target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Release>:-O3 -Wno-unused-variable>)
 
 target_compile_definitions(${PROJECT_NAME} PUBLIC ${X11_XCB_DEFINITIONS} ${XCB_DEFINITIONS})
 
 set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
-target_link_libraries(${PROJECT_NAME} ${XPP_LIBRARIES})
 
 #
 # Add commands
@@ -158,7 +153,7 @@ foreach(PROTO ${PROTO_LIST})
   add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
     # FIXME: Find replacement for the hardcoded paths
     COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/generators/cpp_client.py -p "${PYTHON_XCBGEN}"
-    /usr/share/xcb/${PROTO}.xml > ${PROJECT_SOURCE_DIR}/include/proto/${PROTO_OUTPUT}.hpp)
+    /usr/share/xcb/${PROTO}.xml > ${PROJECT_SOURCE_DIR}/include/xpp/proto/${PROTO_OUTPUT}.hpp)
 endforeach(PROTO)
 
 #
@@ -167,6 +162,6 @@ endforeach(PROTO)
 get_directory_property(HAS_PARENT PARENT_DIRECTORY)
 
 if(HAS_PARENT)
-  set(XPP_INCLUDE_DIRS ${PROJECT_SOURCE_DIR}/include PARENT_SCOPE)
+  set(XPP_INCLUDE_DIRS ${XPP_INCLUDE_DIRS} PARENT_SCOPE)
   set(XPP_LIBRARIES ${PROJECT_NAME} PARENT_SCOPE)
 endif()
