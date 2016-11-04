@@ -12,7 +12,7 @@ pkg_check_modules(XCBPROTO REQUIRED xcb-proto)
 find_package(PythonInterp 2.7 REQUIRED)
 find_package(X11 REQUIRED)
 find_package(X11_XCB REQUIRED)
-find_package(XCB REQUIRED XCB ICCCM EWMH UTIL)
+find_package(XCB REQUIRED XCB ICCCM EWMH UTIL IMAGE)
 
 if(NOT PYTHON_EXECUTABLE)
   message(FATAL_ERROR "Missing PYTHON_EXECUTABLE")
@@ -25,14 +25,16 @@ set(XPP_INCLUDE_DIRS
   ${XCB_XCB_INCLUDE_DIR}
   ${XCB_EWMH_INCLUDE_DIR}
   ${XCB_ICCCM_INCLUDE_DIR}
-  ${XCB_UTIL_INCLUDE_DIR})
+  ${XCB_UTIL_INCLUDE_DIR}
+  ${XCB_IMAGE_INCLUDE_DIR})
 set(XPP_LIBRARIES
   ${X11_X11_LIB}
   ${X11_XCB_LIBRARIES}
   ${XCB_XCB_LIBRARY}
   ${XCB_EWMH_LIBRARY}
   ${XCB_ICCCM_LIBRARY}
-  ${XCB_UTIL_LIBRARY})
+  ${XCB_UTIL_LIBRARY}
+  ${XCB_IMAGE_LIBRARY})
 
 #
 # Loop through a hardcoded list of python executables to locate the python module "xcbgen"
