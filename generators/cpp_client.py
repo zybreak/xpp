@@ -64,7 +64,8 @@ _xcb_includes = \
 
 _cplusplus_annoyances = {'class' : '_class',
                          'new'   : '_new',
-                         'delete': '_delete'}
+                         'delete': '_delete',
+                         'explicit': '_explicit'}
 _c_keywords = {'default' : '_default'}
 
 _hlines = []

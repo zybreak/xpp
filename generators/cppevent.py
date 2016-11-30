@@ -108,7 +108,11 @@ def event_dispatcher_class(namespace, cppevents):
 
     # >>> if begin <<<
     if namespace.is_ext:
-        opcode_switch = "(event->response_type & ~0x80) - m_first_event"
+        # XXX: The xkb extension contains the sub-event in the member pad0
+        if ns == "xkb":
+            opcode_switch = "event->pad0"
+        else:
+            opcode_switch = "(event->response_type & ~0x80) - m_first_event"
 
         members += [ "  uint8_t m_first_event;" ]
 
