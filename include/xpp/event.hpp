@@ -201,7 +201,10 @@ class registry
 template<typename Event>
 void xpp::event::detail::dispatcher::dispatch(const Event & e)
 {
-  dynamic_cast<xpp::event::detail::sink<Event> *>(this)->handle(e);
+  auto event_sink = dynamic_cast<xpp::event::detail::sink<Event> *>(this);
+  if (event_sink != nullptr) {
+    event_sink->handle(e);
+  }
 }
 
 #endif // XPP_EVENT_HPP
