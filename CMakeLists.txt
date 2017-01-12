@@ -130,7 +130,9 @@ endif()
 
 set(PROTO_LIST)
 
-# FIXME: Find replacement for the hardcoded paths
+if(NOT XCBPROTO_PREFIX)
+  set(XCBPROTO_PREFIX /usr)
+endif()
 file(GLOB PROTO_LIST_RAW RELATIVE ${XCBPROTO_PREFIX}/share/xcb ${XCBPROTO_PREFIX}/share/xcb/*.xml)
 
 #
@@ -168,7 +170,6 @@ set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
 foreach(PROTO ${PROTO_LIST})
   string(REGEX REPLACE "proto\$" "" PROTO_OUTPUT ${PROTO})
   add_custom_command(TARGET ${PROJECT_NAME} PRE_BUILD
-    # FIXME: Find replacement for the hardcoded paths
     COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/generators/cpp_client.py -p "${PYTHON_XCBGEN}"
     ${XCBPROTO_PREFIX}/share/xcb/${PROTO}.xml > ${PROJECT_SOURCE_DIR}/include/xpp/proto/${PROTO_OUTPUT}.hpp)
 endforeach(PROTO)
