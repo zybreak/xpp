@@ -11,6 +11,8 @@ class error_dispatcher {
   public:
     virtual
       void operator()(const std::shared_ptr<xcb_generic_error_t> &) const = 0;
+    virtual
+        ~error_dispatcher(void) = 0;
 };
 
 namespace detail {
