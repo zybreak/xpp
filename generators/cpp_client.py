@@ -217,7 +217,7 @@ def c_open(self):
     #     _h('#include "xproto-stub.hpp"')
     # _h('#include "../core/generic/resource.hpp"')
     _h('')
-    _h('namespace xpp { namespace %s {' % get_namespace(_ns))
+    _h('namespace xpp::%s {' % get_namespace(_ns))
     # _h('class window;')
     # _h('namespace %s {', get_namespace(_ns))
     # _h('')
@@ -258,8 +258,7 @@ def c_close(self):
     # sys.stderr.write(_interface_class.make_proto())
 
     _h('')
-    # _h('}; // namespace xpp')
-    _h("} } // namespace xpp::%s" % get_namespace(_ns))
+    _h('};')
 
     _h('')
     _h('#endif // XPP_%s_HPP', get_namespace(_ns).upper())
@@ -731,10 +730,10 @@ def _c_serialize_helper_switch(context, self, complex_name,
             bitcase_expr = _c_accessor_get_expr(expr, None)
             # only one <enumref> in the <bitcase>
             if len_expr == 1:
-                code_lines.append('    if(%s & %s) {' % (switch_expr, bitcase_expr))
+                code_lines.append('    if (%s & %s) {' % (switch_expr, bitcase_expr))
             # multiple <enumref> in the <bitcase>
             elif n == 0: # first
-                code_lines.append('    if((%s & %s) ||' % (switch_expr, bitcase_expr))
+                code_lines.append('    if ((%s & %s) ||' % (switch_expr, bitcase_expr))
             elif len_expr == (n + 1): # last
                 code_lines.append('       (%s & %s)) {' % (switch_expr, bitcase_expr))
             else: # between first and last
@@ -849,7 +848,7 @@ def _c_serialize_helper_list_field(context, self, field,
                 temp_vars.append(xcb_tmp_len)
             # loop over all list elements and call sizeof repeatedly
             # this should be a bit faster than using the iterators
-            code_lines.append("%s    for(i=0; i<%s; i++) {" % (space, list_length))
+            code_lines.append("%s    for (i=0; i<%s; i++) {" % (space, list_length))
             code_lines.append("%s        xcb_tmp_len = %s(xcb_tmp);" %
                               (space, field.type.c_sizeof_name))
             code_lines.append("%s        xcb_block_len += xcb_tmp_len;" % space)
@@ -859,7 +858,7 @@ def _c_serialize_helper_list_field(context, self, field,
         elif 'serialize' == context:
             code_lines.append('%s    xcb_parts[xcb_parts_idx].iov_len = 0;' % space)
             code_lines.append('%s    xcb_tmp = (char *) %s%s;' % (space, prefix_str, field.c_field_name))
-            code_lines.append('%s    for(i=0; i<%s; i++) { ' % (space, list_length))
+            code_lines.append('%s    for (i=0; i<%s; i++) { ' % (space, list_length))
             code_lines.append('%s        xcb_block_len = %s(xcb_tmp);' % (space, field.type.c_sizeof_name))
             code_lines.append('%s        xcb_parts[xcb_parts_idx].iov_len += xcb_block_len;' % space)
             code_lines.append('%s    }' % space)
@@ -1270,11 +1269,11 @@ def _c_serialize(context, self):
         # unserialize: check for sizeof-only invocation
         if 'unserialize' == context:
             _c('')
-            _c('    if (NULL == _aux)')
+            _c('    if (nullptr == _aux)')
             _c('        return xcb_buffer_len;')
 
         _c('')
-        _c('    if (NULL == %s) {', aux_ptr)
+        _c('    if (nullptr == %s) {', aux_ptr)
         _c('        /* allocate memory */')
         _c('        %s = malloc(xcb_buffer_len);', aux_ptr)
         if 'serialize' == context:
@@ -1297,7 +1296,7 @@ def _c_serialize(context, self):
                     _c('    xcb_tmp = xcb_out;')
 
                 # variable sized fields
-                _c('    for(i=0; i<xcb_parts_idx; i++) {')
+                _c('    for (i=0; i<xcb_parts_idx; i++) {')
                 _c('        if (0 != xcb_parts[i].iov_base && 0 != xcb_parts[i].iov_len)')
                 _c('            memcpy(xcb_tmp, xcb_parts[i].iov_base, xcb_parts[i].iov_len);')
                 _c('        if (0 != xcb_parts[i].iov_len)')
@@ -2318,7 +2317,7 @@ def _c_reply(self, name):
         _c('    /* special cases: transform parts of the reply to match XCB data structures */')
         for field in unserialize_fields:
             if field.type.is_list:
-                _c('    for(i=0; i<%s_len; i++) {', field.c_field_name)
+                _c('    for (i=0; i<%s_len; i++) {', field.c_field_name)
                 _c('        %s_data = %s_iter.data;', field.c_field_name, field.c_field_name)
                 _c('        %s((const void *)%s_data, &%s_data);', field.type.c_unserialize_name,
                    field.c_field_name, field.c_field_name)

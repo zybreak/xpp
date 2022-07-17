@@ -26,10 +26,16 @@ class ExtensionClass(object):
 template<typename Derived, typename Connection>
 class interface;
 
-namespace event { template<typename Connection> class dispatcher; }
-namespace error { class dispatcher; }
+namespace event {
+template<typename Connection>
+class dispatcher;
+}
 
-class extension%s{
+namespace error {
+class dispatcher;
+}
+
+class extension%s {
   public:
 %s\
     template<typename Derived, typename Connection>

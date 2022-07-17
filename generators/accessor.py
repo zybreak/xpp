@@ -21,12 +21,8 @@ xpp::generic::iterator<Connection,
 
 _templates['list'] = \
 """\
-    xpp::generic::list<Connection,
-                       %s_reply_t,
-                       %s
-                      >
-    %s(void)
-    {
+    xpp::generic::list<Connection, %s_reply_t, %s>
+    %s() {
       return xpp::generic::list<Connection,
                                 %s_reply_t,
                                 %s
@@ -36,11 +32,8 @@ _templates['list'] = \
 
 _templates['string_accessor'] = \
 '''\
-    std::string
-    %s(void)
-    {
-      return std::string(%s_%s(this->get().get()),
-                         %s_%s_length(this->get().get()));
+    std::string %s() {
+      return std::string(%s_%s(this->get().get()), %s_%s_length(this->get().get()));
     }
 '''
 

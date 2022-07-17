@@ -11,22 +11,19 @@ _templates['error_dispatcher_class'] = \
 '''\
 namespace error {
 
-class dispatcher
-{
+class dispatcher {
   public:
 %s\
 %s\
 
-    void
-    operator()(const std::shared_ptr<xcb_generic_error_t> &%s) const
-    {
+    void operator()(const std::shared_ptr<xcb_generic_error_t> &%s) const {
 %s\
     }
 
 %s\
-}; // class dispatcher
+};
 
-} // namespace error
+}
 '''
 
 def _error_dispatcher_class(typedef, ctors, switch, members, has_errors):
@@ -61,13 +58,9 @@ def error_dispatcher_class(namespace, cpperrors):
             ]
 
         ctors = \
-            [ "%s(uint8_t first_error)" % (ctor_name)
-            , "  : m_first_error(first_error)"
-            , "{}"
+            [ "%s(uint8_t first_error) : m_first_error(first_error) {}" % (ctor_name)
             , ""
-            , "%s(const xpp::%s::extension & extension)" % (ctor_name, ns)
-            , "  : %s(extension->first_error)" % ctor_name
-            , "{}"
+            , "%s(const xpp::%s::extension & extension) : %s(extension->first_error) {}" % (ctor_name, ns, ctor_name)
             ]
 
     # >>> if end <<<
@@ -145,8 +138,7 @@ class CppError(object):
         members = []
 
         opcode_accessor = \
-            [ "static uint8_t opcode(void)"
-            , "{"
+            [ "static uint8_t opcode() {"
             , "  return %s;" % self.opcode_name
             , "}"
             ]
@@ -154,13 +146,11 @@ class CppError(object):
         if self.namespace.is_ext:
             opcode_accessor += \
                 [ ""
-                , "static uint8_t opcode(uint8_t first_error)"
-                , "{"
+                , "static uint8_t opcode(uint8_t first_error) {"
                 , "  return first_error + opcode();"
                 , "}"
                 , ""
-                , "static uint8_t opcode(const xpp::%s::extension & extension)" % ns
-                , "{"
+                , "static uint8_t opcode(const xpp::%s::extension & extension) {" % ns
                 , "  return opcode(extension->first_error);"
                 , "}"
                 ]
@@ -191,24 +181,20 @@ class CppError(object):
         return \
 '''
 namespace error {
-class %s
-  : public xpp::generic::error<%s,
-                               %s>
-{
+class %s : public xpp::generic::error<%s, %s> {
   public:
 %s\
     using xpp::generic::error<%s, %s>::error;
 
-    virtual ~%s(void) {}
+    virtual ~%s() = default;
 
 %s
-    static std::string description(void)
-    {
+    static std::string description() {
       return std::string("%s");
     }
 %s\
-}; // class %s
-} // namespace error
+};
+} 
 ''' % (self.get_name(), # class %s
        self.get_name(), # : public xpp::generic::error<%s,
        self.c_name, # %s>
@@ -217,5 +203,4 @@ class %s
        self.get_name(), # virtual ~%s(void) {}
        opcode_accessor,
        self.opcode_name, # static constexpr const char * opcode_literal
-       members,
-       self.get_name()) # // class %s
+       members)

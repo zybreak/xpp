@@ -5,18 +5,12 @@ _templates = {}
 _templates['void_cookie_function'] = \
 '''\
 %s\
-void
-%s_checked(Connection && c%s)
-{%s\
-  xpp::generic::check<Connection, xpp::%s::error::dispatcher>(
-      std::forward<Connection>(c),
-      %s_checked(std::forward<Connection>(c)%s));
+void %s_checked(Connection && c%s) {%s\
+  xpp::generic::check<Connection, xpp::%s::error::dispatcher>(std::forward<Connection>(c), %s_checked(std::forward<Connection>(c)%s));
 }
 
 %s\
-void
-%s(Connection && c%s)
-{%s\
+void %s(Connection && c%s) {%s\
   %s(std::forward<Connection>(c)%s);
 }
 '''
@@ -42,10 +36,7 @@ def _void_cookie_function(ns, name, c_name, template, return_value, protos, call
 _templates['cookie_static_getter'] = \
 '''\
 %s\
-    static
-    %s
-    cookie(xcb_connection_t * const c%s)
-    {%s\
+    static %s cookie(xcb_connection_t * const c%s) {%s\
       return base::cookie(c%s);
     }
 '''

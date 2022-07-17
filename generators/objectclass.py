@@ -45,25 +45,20 @@ template<typename Derived, typename Connection>
 class %s
 {
   protected:
-    Connection
-    connection(void) const
-    {
+    Connection connection() const {
       return static_cast<const Derived *>(this)->connection();
     }
 
-    const %s &
-    resource(void) const
-    {
+    const %s & resource() const {
       return static_cast<const Derived *>(this)->resource();
     }
 
   public:
-    virtual ~%s(void) {}
+    virtual ~%s() = default;
 
 %s
-}; // class %s
+};
 """ % (name,   # class %s
        c_name, # %s resource(void) { ... }
        name, # virtual ~%s(void)
-       methods,
-       name) # }; // class %s
+       methods)

@@ -17,25 +17,22 @@ template<typename Derived, typename Connection>
 class interface
 {
   protected:
-    Connection
-    connection(void) const
-    {
+    virtual Connection connection() const {
       return static_cast<const Derived *>(this)->connection();
     }
 
   public:
 %s\
 
-    virtual ~interface(void) {}
+    virtual ~interface() = default;
 
     const interface<Derived, Connection> &
-    %s(void)
-    {
+    %s() {
       return *this;
     }
 
 %s\
-}; // class interface
+};
 """
 
 _ignore_events = \

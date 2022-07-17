@@ -9,11 +9,8 @@ namespace reply {
 
 namespace detail {
 
-template<typename Connection,
-         typename Check,
-         typename CookieFunction>
-class %s
-  : public xpp::generic::reply<%s<Connection, Check, CookieFunction>,
+template<typename Connection, typename Check, typename CookieFunction>
+class %s : public xpp::generic::reply<%s<Connection, Check, CookieFunction>,
                                Connection,
                                Check,
                                SIGNATURE(%s_reply),
@@ -28,31 +25,26 @@ class %s
                                   base;
 
     template<typename C, typename ... Parameter>
-    %s(C && c, Parameter && ... parameter)
-      : base(std::forward<C>(c), std::forward<Parameter>(parameter) ...)
+    %s(C && c, Parameter && ... parameter) : base(std::forward<C>(c), std::forward<Parameter>(parameter) ...)
     {}
 
 %s\
 %s\
-}; // class %s
+};
 
-} // namespace detail
+}
 
 namespace checked {
 template<typename Connection>
-using %s = detail::%s<
-    Connection, xpp::generic::checked_tag,
-    SIGNATURE(%s)>;
-} // namespace checked
+using %s = detail::%s<Connection, xpp::generic::checked_tag, SIGNATURE(%s)>;
+}
 
 namespace unchecked {
 template<typename Connection>
-using %s = detail::%s<
-    Connection, xpp::generic::unchecked_tag,
-    SIGNATURE(%s_unchecked)>;
-} // namespace unchecked
+using %s = detail::%s<Connection, xpp::generic::unchecked_tag, SIGNATURE(%s_unchecked)>;
+}
 
-} // namespace reply
+}
 '''
 
 def _reply_class(name, c_name, ns, cookie, accessors):
@@ -65,7 +57,6 @@ def _reply_class(name, c_name, ns, cookie, accessors):
             , name # c'tor
             , cookie.make_static_getter()
             , accessors
-            , name # // class %s
             , name # checked { using %s =
             , name # checked { detail::%s
             , c_name # checked { SIGNATURE
@@ -77,9 +68,7 @@ def _reply_class(name, c_name, ns, cookie, accessors):
 _templates['reply_member_accessor'] = \
 '''\
     template<typename ReturnType = %s, typename ... Parameter>
-    ReturnType
-    %s(Parameter && ... parameter)
-    {
+    ReturnType %s(Parameter && ... parameter) {
       using make = xpp::generic::factory::make<Connection,
                                                decltype(this->get()->%s),
                                                ReturnType,

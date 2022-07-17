@@ -13,9 +13,7 @@ _field_accessor_template_specialization = \
 '''\
 template<typename Connection>
 template<>
-%s
-%s<Connection>::%s<%s>(void) const
-{
+%s %s<Connection>::%s<%s>(void) const {
   return %s;
 }\
 '''
@@ -25,9 +23,7 @@ _templates = {}
 _templates['field_accessor_template'] = \
 '''\
     template<typename ReturnType = %s, typename ... Parameter>
-    ReturnType
-    %s(Parameter && ... parameter) const
-    {
+    ReturnType %s(Parameter && ... parameter) const {
       using make = xpp::generic::factory::make<Connection,
                                                decltype((*this)->%s),
                                                ReturnType,
@@ -51,25 +47,21 @@ _templates['event_dispatcher_class'] = \
 namespace event {
 
 template<typename Connection>
-class dispatcher
-{
+class dispatcher {
   public:
 %s\
 %s\
 
     template<typename Handler>
-    bool
-    operator()(Handler%s,
-               const std::shared_ptr<xcb_generic_event_t> &%s) const
-    {\
+    bool operator()(Handler%s, const std::shared_ptr<xcb_generic_event_t> &%s) const {\
 %s
       return false;
     }
 
 %s\
-}; // class dispatcher
+};
 
-} // namespace event
+}
 '''
 
 def _event_dispatcher_class(typedef, ctors, switch, members, has_events):
@@ -101,9 +93,7 @@ def event_dispatcher_class(namespace, cppevents):
 
     ctors = \
         [ "template<typename C>"
-        , "%s(C && c)" % ctor_name
-        , "  : m_c(std::forward<C>(c))"
-        , "{}"
+        , "%s(C && c) : m_c(std::forward<C>(c))  {}" % ctor_name
         ]
 
     # >>> if begin <<<
@@ -118,15 +108,10 @@ def event_dispatcher_class(namespace, cppevents):
 
         ctors = \
             [ "template<typename C>"
-            , "%s(C && c, uint8_t first_event)" % (ctor_name)
-            , "  : m_c(std::forward<C>(c))"
-            , "  , m_first_event(first_event)"
-            , "{}"
+            , "%s(C && c, uint8_t first_event) : m_c(std::forward<C>(c)) , m_first_event(first_event) {}" % (ctor_name)
             , ""
             , "template<typename C>"
-            , "%s(C && c, const xpp::%s::extension & extension)" % (ctor_name, ns)
-            , "  : %s(std::forward<C>(c), extension->first_event)" % ctor_name
-            , "{}"
+            , "%s(C && c, const xpp::%s::extension & extension) : %s(std::forward<C>(c), extension->first_event) {}" % (ctor_name, ns, ctor_name)
             ]
 
     # >>> if end <<<
@@ -248,10 +233,7 @@ class CppEvent(object):
         ctor = \
             [ "template<typename C>"
             , "%s(C && c," % self.get_name()
-            , (" " * len(self.get_name())) + " const std::shared_ptr<xcb_generic_event_t> & event)"
-            , "  : base(event)"
-            , "  , m_c(std::forward<C>(c))"
-            , "{}"
+            , (" " * len(self.get_name())) + " const std::shared_ptr<xcb_generic_event_t> & event) : base(event), m_c(std::forward<C>(c)) {}"
             ]
 
         m_first_event = ""
@@ -259,15 +241,13 @@ class CppEvent(object):
         typedef = [ "typedef xpp::%s::extension extension;" % ns ]
 
         description = \
-            [ "static std::string description(void)"
-            , "{"
+            [ "static std::string description() {"
             , "  return std::string(\"%s\");" % self.opcode_name
             , "}"
             ]
 
         opcode_accessor = \
-            [ "static uint8_t opcode(void)"
-            , "{"
+            [ "static uint8_t opcode() {"
             , "  return %s;" % self.opcode_name
             , "}"
             ]
@@ -277,20 +257,17 @@ class CppEvent(object):
         if self.namespace.is_ext:
             opcode_accessor += \
                 [ ""
-                , "static uint8_t opcode(uint8_t first_event)"
-                , "{"
+                , "static uint8_t opcode(uint8_t first_event) {"
                 , "  return first_event + opcode();"
                 , "}"
                 , ""
-                , "static uint8_t opcode(const xpp::%s::extension & extension)" % ns
-                , "{"
+                , "static uint8_t opcode(const xpp::%s::extension & extension) {" % ns
                 , "  return opcode(extension->first_event);"
                 , "}"
                 ]
 
             first_event = \
-                [ "uint8_t first_event(void)"
-                , "{"
+                [ "uint8_t first_event() {"
                 , "  return m_first_event;"
                 , "}"
                 ]
@@ -344,16 +321,14 @@ class CppEvent(object):
 '''
 namespace event {
 template<typename Connection>
-class %s
-  : public xpp::generic::event<%s>
-{
+class %s : public xpp::generic::event<%s> {
   public:
 %s\
     typedef xpp::generic::event<%s> base;
 
 %s\
 
-    virtual ~%s(void) {}
+    virtual ~%s() = default;
 
 %s\
 %s\
@@ -362,9 +337,9 @@ class %s
   protected:
     Connection m_c;
 %s\
-}; // class %s
+}
 %s\
-} // namespace event
+}
 ''' % (self.get_name(), # class %s
        self.c_name, # %s>
        typedef,
@@ -376,5 +351,4 @@ class %s
        first_event,
        member_accessors,
        m_first_event,
-       self.get_name(), # // class %s
        member_accessors_special)

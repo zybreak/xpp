@@ -12,9 +12,7 @@ _templates = {}
 _templates['void_request_function'] = \
 '''\
 template<typename Connection, typename ... Parameter>
-void
-%s_checked(Connection && c, Parameter && ... parameter)
-{
+void %s_checked(Connection && c, Parameter && ... parameter) {
   xpp::generic::check<Connection, xpp::%s::error::dispatcher>(
       std::forward<Connection>(c),
       %s_checked(
@@ -23,9 +21,7 @@ void
 }
 
 template<typename ... Parameter>
-void
-%s(Parameter && ... parameter)
-{
+void %s(Parameter && ... parameter) {
   %s(std::forward<Parameter>(parameter) ...);
 }
 '''
@@ -42,17 +38,13 @@ def _void_request_function(ns, name, c_name):
 _templates['reply_request_function'] = \
 '''\
 template<typename Connection, typename ... Parameter>
-reply::checked::%s<Connection>
-%s(Connection && c, Parameter && ... parameter)
-{
+reply::checked::%s<Connection> %s(Connection && c, Parameter && ... parameter) {
   return reply::checked::%s<Connection>(
       std::forward<Connection>(c), std::forward<Parameter>(parameter) ...);
 }
 
 template<typename Connection, typename ... Parameter>
-reply::unchecked::%s<Connection>
-%s_unchecked(Connection && c, Parameter && ... parameter)
-{
+reply::unchecked::%s<Connection> %s_unchecked(Connection && c, Parameter && ... parameter) {
   return reply::unchecked::%s<Connection>(
       std::forward<Connection>(c), std::forward<Parameter>(parameter) ...);
 }
@@ -70,10 +62,7 @@ def _reply_request_function(name):
 _templates['inline_reply_class'] = \
 '''\
     template<typename ... Parameter>
-    auto
-    %s(Parameter && ... parameter) const
-    -> reply::checked::%s<Connection>
-    {
+    auto %s(Parameter && ... parameter) const -> reply::checked::%s<Connection> {
       return xpp::%s::%s(
           connection(),
           %s\
@@ -81,10 +70,7 @@ _templates['inline_reply_class'] = \
     }
 
     template<typename ... Parameter>
-    auto
-    %s_unchecked(Parameter && ... parameter) const
-    -> reply::unchecked::%s<Connection>
-    {
+    auto %s_unchecked(Parameter && ... parameter) const -> reply::unchecked::%s<Connection> {
       return xpp::%s::%s_unchecked(
           connection(),
           %s\
@@ -109,18 +95,14 @@ def _inline_reply_class(request_name, method_name, member, ns):
 _templates['inline_void_class'] = \
 '''\
     template<typename ... Parameter>
-    void
-    %s_checked(Parameter && ... parameter) const
-    {
+    void %s_checked(Parameter && ... parameter) const {
       xpp::%s::%s_checked(connection(),
                           %s\
                           std::forward<Parameter>(parameter) ...);
     }
 
     template<typename ... Parameter>
-    void
-    %s(Parameter && ... parameter) const
-    {
+    void %s(Parameter && ... parameter) const {
       xpp::%s::%s(connection(),
                   %s\
                   std::forward<Parameter>(parameter) ...);
