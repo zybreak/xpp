@@ -13,14 +13,14 @@ template<typename Connection, typename Check, typename CookieFunction>
 class %s : public xpp::generic::reply<%s<Connection, Check, CookieFunction>,
                                Connection,
                                Check,
-                               SIGNATURE(%s_reply),
+                               xpp::generic::signature<decltype(%s_reply), %s_reply>,
                                CookieFunction>
 {
   public:
     typedef xpp::generic::reply<%s<Connection, Check, CookieFunction>,
                                 Connection,
                                 Check,
-                                SIGNATURE(%s_reply),
+                                xpp::generic::signature<decltype(%s_reply), %s_reply>,
                                 CookieFunction>
                                   base;
 
@@ -36,12 +36,12 @@ class %s : public xpp::generic::reply<%s<Connection, Check, CookieFunction>,
 
 namespace checked {
 template<typename Connection>
-using %s = detail::%s<Connection, xpp::generic::checked_tag, SIGNATURE(%s)>;
+using %s = detail::%s<Connection, xpp::generic::checked_tag, xpp::generic::signature<decltype(%s), %s>>;
 }
 
 namespace unchecked {
 template<typename Connection>
-using %s = detail::%s<Connection, xpp::generic::unchecked_tag, SIGNATURE(%s_unchecked)>;
+using %s = detail::%s<Connection, xpp::generic::unchecked_tag, xpp::generic::signature<decltype(%s_unchecked), %s_unchecked>>;
 }
 
 }
@@ -52,7 +52,9 @@ def _reply_class(name, c_name, ns, cookie, accessors):
             ( name
             , name # base class
             , c_name # %s_reply
+            , c_name # %s_reply
             , name # typedef
+            , c_name # %s_reply
             , c_name # %s_reply
             , name # c'tor
             , cookie.make_static_getter()
@@ -60,8 +62,10 @@ def _reply_class(name, c_name, ns, cookie, accessors):
             , name # checked { using %s =
             , name # checked { detail::%s
             , c_name # checked { SIGNATURE
+            , c_name # checked { SIGNATURE
             , name # unchecked { using %s =
             , name # unchecked { detail::%s
+            , c_name # unchecked { SIGNATURE
             , c_name # unchecked { SIGNATURE
             )
 

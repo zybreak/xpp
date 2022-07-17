@@ -6,17 +6,17 @@ _templates['iter_fixed'] = \
 """\
 xpp::generic::iterator<Connection,
                        %s,
-                       SIGNATURE(%s_%s),
-                       SIGNATURE(%s_%s_length)>\
+                       xpp::generic::signature<decltype(%s_%s), %s_%s>,
+                       xpp::generic::signature<decltype(%s_%s_length), %s_%s_length>>\
 """
 
 _templates['iter_variable'] = \
 """\
 xpp::generic::iterator<Connection,
                        %s,
-                       SIGNATURE(%s_next),
-                       SIGNATURE(%s_sizeof),
-                       SIGNATURE(%s_%s_iterator)>\
+                       xpp::generic::signature<decltype(%s_next), %s_next>,
+                       xpp::generic::signature<decltype(%s_sizeof), %s_sizeof>,
+                       xpp::generic::signature<decltype(%s_%s_iterator), %s_%s_iterator>>\
 """
 
 _templates['list'] = \
@@ -81,6 +81,8 @@ class Accessor(object):
         return _templates['iter_fixed'] \
                 % (return_type,
                    self.c_name, self.member,
+                   self.c_name, self.member,
+                   self.c_name, self.member,
                    self.c_name, self.member)
 
 
@@ -89,6 +91,9 @@ class Accessor(object):
                 % (self.c_type,
                    self.iter_name,
                    self.iter_name,
+                   self.iter_name,
+                   self.iter_name,
+                   self.c_name, self.member,
                    self.c_name, self.member)
 
 
