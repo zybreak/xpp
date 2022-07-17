@@ -111,11 +111,6 @@ class iterator<Connection,
                xpp::generic::signature<NextTemplate, Next>,
                xpp::generic::signature<SizeOfTemplate, SizeOf>,
                xpp::generic::signature<GetIteratorTemplate, GetIterator>>
-  : public std::iterator<typename std::input_iterator_tag,
-                         Object,
-                         typename std::size_t,
-                         Object *,
-                         const Object &>
 {
   protected:
     using self = iterator<Connection,
@@ -135,6 +130,12 @@ class iterator<Connection,
     XcbIterator m_iterator;
 
   public:
+    using iterator_category = typename std::input_iterator_tag;
+    using value_type = Object;
+    using difference_type = typename std::size_t;
+    using pointer = Object *;
+    using reference = const Object &;
+
     iterator(void) {}
 
     template<typename C>
@@ -236,11 +237,6 @@ class iterator<Connection,
                Object,
                signature<AccessorTemplate, Accessor>,
                signature<LengthTemplate, Length>>
-  : public std::iterator<typename std::input_iterator_tag,
-                         Object,
-                         typename std::size_t,
-                         Object *,
-                         const Object &>
 {
   protected:
 
@@ -258,6 +254,12 @@ class iterator<Connection,
     std::shared_ptr<Reply> m_reply;
 
   public:
+    using iterator_category = typename std::input_iterator_tag;
+    using value_type = Object;
+    using difference_type = typename std::size_t;
+    using pointer = Object *;
+    using reference = const Object &;
+
     typedef iterator<Connection,
                      Object,
                      signature<AccessorTemplate, Accessor>,
