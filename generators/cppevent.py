@@ -337,7 +337,7 @@ class %s : public xpp::generic::event<%s> {
   protected:
     Connection m_c;
 %s\
-}
+};
 %s\
 }
 ''' % (self.get_name(), # class %s
