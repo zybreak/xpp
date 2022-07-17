@@ -36,5 +36,5 @@ LIBS=x11 \
      xcb-xinerama \
      xcb-dri2
 
-CXXFLAGS=-std=c++11 -Wall -O0 $(shell pkg-config --cflags ${LIBS})
+CXXFLAGS=-std=c++17 -Wall -O0 $(shell pkg-config --cflags ${LIBS})
 LDFLAGS=$(shell pkg-config --libs ${LIBS})

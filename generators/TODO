@@ -1,7 +1,5 @@
 TODO:
 
-* Build with python 3
-
 * valueparams
 
 * serialized fields (e.g. xcb_sync_create_alarm_value_list_serialize)

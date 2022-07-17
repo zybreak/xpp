@@ -1,8 +1,8 @@
-# xpp - A C++11 RAII wrapper for XCB
+# xpp - A C++17 RAII wrapper for XCB
 
 ## Synopsis
 
-XPP is a header only C++11
+XPP is a header only C++17
 [RAII](https://en.wikipedia.org/wiki/Resource_Acquisition_Is_Initialization)
 wrapper around [X protocol C-language Binding
 (XCB)](http://xcb.freedesktop.org). Pointers to dynamically allocated memory,
