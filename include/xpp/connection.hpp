@@ -27,14 +27,7 @@ namespace xpp {
 
 
     public:
-        template<typename ... Parameters> explicit connection(Parameters &&... parameters) : xpp::core::core(std::forward<Parameters>(parameters) ...), detail::interfaces<connection<Extensions ...>, Extensions ...>(*this), Extensions(static_cast<xcb_connection_t *>(*this)) ..., Extensions::error_dispatcher(
-
-        static_cast<Extensions &>(*this).
-
-        get()
-
-        ) ...
-        {
+        template<typename ... Parameters> explicit connection(Parameters &&... parameters) : xpp::core::core(std::forward<Parameters>(parameters) ...), detail::interfaces<connection<Extensions ...>, Extensions ...>(*this), Extensions(static_cast<xcb_connection_t *>(*this)) ..., Extensions::error_dispatcher(static_cast<Extensions &>(*this).get()) ... {
             m_root_window = screen_of_display(default_screen())->root;
         }
 

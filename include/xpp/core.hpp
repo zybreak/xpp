@@ -52,8 +52,7 @@ namespace xpp {
         }
 
         template<typename ... ConnectionParameter>
-        explicit
-        core(xcb_connection_t *(*Connect)(ConnectionParameter ...), ConnectionParameter ... connection_parameter)
+        explicit core(xcb_connection_t *(*Connect)(ConnectionParameter ...), ConnectionParameter ... connection_parameter)
                 : m_c(
                 std::shared_ptr<xcb_connection_t>(Connect(connection_parameter ...), [&](void *) { disconnect(); })) {
         }

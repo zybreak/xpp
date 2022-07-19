@@ -12,8 +12,7 @@ namespace xpp {
         using base = xpp::generic::resource<Connection, xcb_cursor_t, xpp::x::cursor, Interfaces ...>;
 
         template<typename C, typename Create, typename Destroy>
-        cursor(C &&c, Create &&create, Destroy &&destroy)
-                : base(base::make(std::forward<C>(c), std::forward<Create>(create), std::forward<Destroy>(destroy))) {
+        cursor(C &&c, Create &&create, Destroy &&destroy) : base(base::make(std::forward<C>(c), std::forward<Create>(create), std::forward<Destroy>(destroy))) {
         }
 
     public:
