@@ -151,29 +151,22 @@ class core
     shared_generic_event_ptr
     poll_for_event(void) const
     {
-      return shared_generic_event_ptr(xcb_poll_for_event(m_c.get()));
+      return shared_generic_event_ptr(xcb_poll_for_event(m_c.get()), std::free);
     }
 
     virtual
     shared_generic_event_ptr
     poll_for_queued_event(void) const
     {
-      return shared_generic_event_ptr(xcb_poll_for_queued_event(m_c.get()));
+      return shared_generic_event_ptr(xcb_poll_for_queued_event(m_c.get()), std::free);
     }
 
     virtual
     shared_generic_event_ptr
     poll_for_special_event(xcb_special_event_t * se) const
     {
-      return shared_generic_event_ptr(xcb_poll_for_special_event(m_c.get(), se));
+      return shared_generic_event_ptr(xcb_poll_for_special_event(m_c.get(), se), std::free);
     }
-
-    // virtual
-    // shared_generic_event_ptr
-    // poll_for_special_event(const std::shared_ptr<xcb_special_event_t> & se) const
-    // {
-    //   return poll_for_special_event(se.get());
-    // }
 
     virtual
     shared_generic_event_ptr
@@ -183,14 +176,6 @@ class core
                       xcb_wait_for_special_event(m_c.get(), se));
     }
 
-    // virtual
-    // shared_generic_event_ptr
-    // wait_for_special_event(const std::shared_ptr<xcb_special_event_t> & se) const
-    // {
-    //   return wait_for_special_event(se.get());
-    // }
-
-    // xcb_special_event_t has incomplete type -> no std::shared_ptr
     virtual
     xcb_special_event_t *
     register_for_special_xge(xcb_extension_t * ext,
