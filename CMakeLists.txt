@@ -12,12 +12,15 @@ pkg_check_modules(XCBPROTO REQUIRED xcb-proto)
 # Store the location of the proto xml files inside XCBPROTO_XCBINCLUDEDIR
 pkg_get_variable(XCBPROTO_XCBINCLUDEDIR xcb-proto xcbincludedir)
 
-if(${CMAKE_VERSION} VERSION_LESS "3.12.0")
-  find_package(PythonInterp 3.5 REQUIRED)
-else()
-  find_package(Python3 REQUIRED COMPONENTS Interpreter)
-  if(Python3_FOUND)
-    set(PYTHON_EXECUTABLE "${Python3_EXECUTABLE}")
+# Search for a python interpreter, if the user didn't specify any
+if(NOT PYTHON_EXECUTABLE)
+  if(${CMAKE_VERSION} VERSION_LESS "3.12.0")
+    find_package(PythonInterp 3.5 REQUIRED)
+  else()
+    find_package(Python3 REQUIRED COMPONENTS Interpreter)
+    if(Python3_FOUND)
+      set(PYTHON_EXECUTABLE "${Python3_EXECUTABLE}")
+    endif()
   endif()
 endif()
 
