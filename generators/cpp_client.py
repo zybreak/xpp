@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# vim: set ts=4 sws=4 sw=4:
+# vim: set ts=4 sw=4:
 
 from xml.etree.ElementTree import *
 from os.path import basename

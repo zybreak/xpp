@@ -10,26 +10,22 @@ find_package(PkgConfig)
 pkg_check_modules(XCBPROTO REQUIRED xcb-proto)
 
 # Store the location of the proto xml files inside XCBPROTO_XCBINCLUDEDIR
-if(${CMAKE_VERSION} VERSION_LESS "3.4.0")
-    # pkg_get_variable was introduced in 3.4.0 if it isn't available, we fall back to ${prefix}/share/xcb
+pkg_get_variable(XCBPROTO_XCBINCLUDEDIR xcb-proto xcbincludedir)
 
-    if(NOT XCBPROTO_PREFIX)
-        set(XCBPROTO_PREFIX /usr)
-    endif()
-
-    set(XCBPROTO_XCBINCLUDEDIR ${XCBPROTO_PREFIX}/share/xcb)
-    message(STATUS "${PROJECT_NAME}: pkg_get_variable not supported, setting XCBPROTO_XCBINCLUDEDIR to ${XCBPROTO_XCBINCLUDEDIR}")
+if(${CMAKE_VERSION} VERSION_LESS "3.12.0")
+  find_package(PythonInterp 3.5 REQUIRED)
 else()
-    # The xml file that need to be included later are stored in xcbincludedir as defined in xcb-proto.pc
-    pkg_get_variable(XCBPROTO_XCBINCLUDEDIR xcb-proto xcbincludedir)
+  find_package(Python3 REQUIRED COMPONENTS Interpreter)
+  if(Python3_FOUND)
+    set(PYTHON_EXECUTABLE "${Python3_EXECUTABLE}")
+  endif()
 endif()
-
-find_package(PythonInterp 3.5 REQUIRED)
-find_package(XCB REQUIRED XCB ICCCM EWMH UTIL IMAGE)
 
 if(NOT PYTHON_EXECUTABLE)
   message(FATAL_ERROR "Missing PYTHON_EXECUTABLE")
 endif()
+
+find_package(XCB REQUIRED XCB ICCCM EWMH UTIL IMAGE)
 
 set(GEN_SRC "${CMAKE_CURRENT_BINARY_DIR}/generated-sources")
 
