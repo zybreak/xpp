@@ -1,5 +1,12 @@
-cmake_minimum_required(VERSION 3.5.0 FATAL_ERROR)
-project(xpp)
+cmake_minimum_required(VERSION 3.29.20240416 FATAL_ERROR)
+
+set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD "0e5b6991-d74f-4b3d-a41c-cf096e0b2508")
+
+project(xpp VERSION 1.0 LANGUAGES CXX)
+
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_MODULE_STD ON)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 
@@ -33,8 +40,6 @@ find_package(XCB REQUIRED XCB ICCCM EWMH UTIL IMAGE)
 set(GEN_SRC "${CMAKE_CURRENT_BINARY_DIR}/generated-sources")
 
 set(XPP_INCLUDE_DIRS
-  ${PROJECT_SOURCE_DIR}/include
-  ${GEN_SRC}/include
   ${XCB_XCB_INCLUDE_DIR}
   ${XCB_EWMH_INCLUDE_DIR}
   ${XCB_ICCCM_INCLUDE_DIR}
@@ -176,24 +181,13 @@ endforeach(PROTO)
 # Create project lib and commands
 #
 file(GLOB_RECURSE HEADER_FILES ${PROJECT_SOURCE_DIR}/include/*.hpp)
-add_library(${PROJECT_NAME} STATIC ${HEADER_FILES} ${PROTO_HEADER_FILES})
-
-target_include_directories(${PROJECT_NAME} PUBLIC ${XPP_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} PRIVATE ${XPP_LIBRARIES})
-
-target_compile_options(${PROJECT_NAME} PRIVATE -std=c++14 -Wall -Wpedantic)
-target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Debug>:-g3 -DDEBUG>)
-target_compile_options(${PROJECT_NAME} PRIVATE $<$<CONFIG:Release>:-O3 -Wno-unused-variable>)
-target_compile_options(${PROJECT_NAME} PUBLIC ${XCB_DEFINITIONS})
-
-set_target_properties(${PROJECT_NAME} PROPERTIES LINKER_LANGUAGE CXX)
-
-#
-# Export lists to the parent scope if there are any
-#
-get_directory_property(HAS_PARENT PARENT_DIRECTORY)
-
-if(HAS_PARENT)
-  set(XPP_INCLUDE_DIRS ${XPP_INCLUDE_DIRS} PARENT_SCOPE)
-  set(XPP_LIBRARIES ${PROJECT_NAME} PARENT_SCOPE)
-endif()
+add_library(${PROJECT_NAME} INTERFACE)
+target_sources(${PROJECT_NAME} PUBLIC
+        FILE_SET HEADERS
+        BASE_DIRS
+        include
+        ${GEN_SRC}/include
+        FILES ${HEADER_FILES} ${PROTO_HEADER_FILES})
+target_include_directories(${PROJECT_NAME} INTERFACE ${XPP_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} INTERFACE ${XPP_LIBRARIES})
+target_compile_options(${PROJECT_NAME} INTERFACE ${XCB_DEFINITIONS})
