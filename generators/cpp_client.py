@@ -200,23 +200,32 @@ def c_open(self):
     _c_setlevel(0)
 
     # _h('#ifndef EXPORT_%s_MIXINS', get_namespace(_ns).upper())
-    _h('#ifndef XPP_%s_HPP', get_namespace(_ns).upper())
-    _h('#define XPP_%s_HPP', get_namespace(_ns).upper())
-    _h('')
-    _h('#include <string>')
-    _h('#include <vector>')
-    _h('')
+    #_h('#ifndef XPP_%s_HPP', get_namespace(_ns).upper())
+    #_h('#define XPP_%s_HPP', get_namespace(_ns).upper())
+    _h('module;')
 
+    if _ns.header.lower() == 'xkb':
+        _h('#define explicit _explicit')
     _h('#include <xcb/' + _get_xcb_include(_ns.header.lower()) + '>')
-
+    if _ns.header.lower() == 'xkb':
+        _h('#undef _explicit')
+    _h('')
+    _h('#define SIGNATURE(NAME) \\')
+    _h('    xpp::generic::signature<decltype(NAME), NAME>')
+    _h('')
+    _h('export module xpp.proto.%s;', get_namespace(_ns).lower())
+    _h('')
+    _h('import std;')
+    #_h('#include <string>')
+    #_h('#include <vector>')
     _h('')
 
-    _h('#include "xpp/generic.hpp"')
+    _h('import xpp.generic;')
 
     # if not _ns.is_ext:
     #     _h('#include "xproto-stub.hpp"')
     # _h('#include "../core/generic/resource.hpp"')
-    _h('')
+    _h('export {')
     _h('namespace xpp { namespace %s {' % get_namespace(_ns))
     # _h('class window;')
     # _h('namespace %s {', get_namespace(_ns))
@@ -261,8 +270,9 @@ def c_close(self):
     # _h('}; // namespace xpp')
     _h("} } // namespace xpp::%s" % get_namespace(_ns))
 
+    _h('}')
     _h('')
-    _h('#endif // XPP_%s_HPP', get_namespace(_ns).upper())
+    #_h('#endif // XPP_%s_HPP', get_namespace(_ns).upper())
 
     # Write header file
     hfile = sys.stdout

@@ -160,30 +160,62 @@ endforeach(PROTO_RAW)
 #
 # Add commands
 #
-set(PROTO_HEADER_DIR "${GEN_SRC}/include/xpp/proto")
-file(MAKE_DIRECTORY ${PROTO_HEADER_DIR})
-set(PROTO_HEADER_FILES "")
+set(PROTO_GEN_DIR "${GEN_SRC}/xpp/proto")
+file(MAKE_DIRECTORY ${PROTO_GEN_DIR})
+set(PROTO_GEN_FILES "")
 foreach(PROTO ${PROTO_LIST})
-  string(REGEX REPLACE "proto\$" "" PROTO_OUTPUT ${PROTO})
-  set(OUTPUT_FILE ${PROTO_HEADER_DIR}/${PROTO_OUTPUT}.hpp)
-  add_custom_command(
-    OUTPUT ${OUTPUT_FILE}
-    COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/generators/cpp_client.py -p "${PYTHON_XCBGEN}"
-    ${XCBPROTO_XCBINCLUDEDIR}/${PROTO}.xml > ${OUTPUT_FILE})
-  list(APPEND PROTO_HEADER_FILES ${OUTPUT_FILE})
+    string(REGEX REPLACE "proto\$" "" PROTO_OUTPUT ${PROTO})
+    set(OUTPUT_FILE ${PROTO_GEN_DIR}/${PROTO_OUTPUT}.cppm)
+    #execute_process(
+    #        OUTPUT_FILE ${OUTPUT_FILE}
+    #        COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/generators/cpp_client.py -p "${PYTHON_XCBGEN}"
+    #        ${XCBPROTO_XCBINCLUDEDIR}/${PROTO}.xml > ${OUTPUT_FILE}
+    #        RESULT_VARIABLE result)
+    #if(NOT result EQUAL 0)
+    #    message(FATAL_ERROR "xcb-gen failed")
+    #endif()
+    add_custom_command(
+            OUTPUT ${OUTPUT_FILE}
+            COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/generators/cpp_client.py -p "${PYTHON_XCBGEN}"
+            ${XCBPROTO_XCBINCLUDEDIR}/${PROTO}.xml > ${OUTPUT_FILE})
+    list(APPEND PROTO_GEN_FILES ${OUTPUT_FILE})
 endforeach(PROTO)
+
 
 #
 # Create project lib and commands
 #
-file(GLOB_RECURSE HEADER_FILES ${PROJECT_SOURCE_DIR}/include/*.hpp)
-add_library(${PROJECT_NAME} INTERFACE)
+add_library(${PROJECT_NAME} STATIC)
 target_sources(${PROJECT_NAME} PUBLIC
-        FILE_SET HEADERS
-        BASE_DIRS
-        include
-        ${GEN_SRC}/include
-        FILES ${HEADER_FILES} ${PROTO_HEADER_FILES})
+        FILE_SET cxx_modules TYPE CXX_MODULES
+        BASE_DIRS src ${GEN_SRC}
+        FILES
+        src/xpp.cppm
+        src/generic.cppm
+        src/generic/error.cppm
+        src/generic/event.cppm
+        src/generic/factory.cppm
+        src/generic/signature.cppm
+        src/generic/request.cppm
+        src/generic/resource.cppm
+        src/generic/extension.cppm
+        src/generic/iterator_traits.cppm
+        src/generic/reply_iterator.cppm
+        src/generic/input_iterator_adapter.cppm
+        src/core.cppm
+        src/atom.cppm
+        src/event.cppm
+        src/colormap.cppm
+        src/cursor.cppm
+        src/drawable.cppm
+        src/font.cppm
+        src/fontable.cppm
+        src/gcontext.cppm
+        src/pixmap.cppm
+        src/window.cppm
+        src/connection.cppm
+        ${PROTO_GEN_FILES}
+)
 target_include_directories(${PROJECT_NAME} INTERFACE ${XPP_INCLUDE_DIRS})
 target_link_libraries(${PROJECT_NAME} INTERFACE ${XPP_LIBRARIES})
 target_compile_options(${PROJECT_NAME} INTERFACE ${XCB_DEFINITIONS})
