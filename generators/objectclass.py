@@ -32,9 +32,13 @@ class ObjectClass(object):
         name = self.name.lower()
         c_name = self.c_name
         methods = ""
+        
+        if name == "event":
+            sys.stderr.write('renaming ObjectClass %s to %s in namespace %s for %s\n' % (name, 'Event', ns, c_name))
+            name = "Event"
 
         for request in self.requests:
-            methods += request.make_object_class_inline(False, self.name.lower()) + "\n\n"
+            methods += request.make_object_class_inline(False, name) + "\n\n"
 
         if methods == "":
             return ""

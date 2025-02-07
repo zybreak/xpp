@@ -5,7 +5,8 @@ _reserved_keywords = {'class' : '_class',
                       'delete': '_delete',
                       'default' : '_default',
                       'private' : '_private',
-                      'explicit': '_explicit'}
+                      'explicit': '_explicit',
+                      'union': '_union'}
 
 def get_namespace(namespace):
     if namespace.is_ext:

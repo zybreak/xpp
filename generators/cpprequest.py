@@ -1,7 +1,7 @@
 # vim: set ts=4 sws=4 sw=4:
 
 # from utils import *
-from utils import _n, _ext, _n_item, get_namespace
+from utils import _n, _ext, _n_item, get_namespace, _reserved_keywords
 from parameter import *
 from resource_classes import _resource_classes
 from cppreply import CppReply
@@ -144,7 +144,12 @@ _replace_special_classes = \
 
 def replace_class(method, class_name):
     cn = _replace_special_classes.get(class_name, class_name)
-    return method.replace("_" + cn, "")
+    method_name = method.replace("_" + cn, "")
+    if method_name in _reserved_keywords:
+        sys.stderr.write('Reserved word "%s" used for method in class "%s", replacing with "%s"\n' % (method_name, class_name, method))
+        return method
+    else:
+        return method_name
 
 class CppRequest(object):
     def __init__(self, request, name, is_void, namespace, reply):
