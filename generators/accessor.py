@@ -5,18 +5,18 @@ _templates = {}
 _templates['iter_fixed'] = \
 """\
 xpp::generic::iterator<Connection,
-                       %s,
-                       SIGNATURE(%s_%s),
-                       SIGNATURE(%s_%s_length)>\
+                       %(return_type)s,
+                       xpp::generic::signature<decltype(%(c_name)s_%(member)s), %(c_name)s_%(member)s>,
+                       xpp::generic::signature<decltype(%(c_name)s_%(member)s_length), %(c_name)s_%(member)s_length>>\
 """
 
 _templates['iter_variable'] = \
 """\
 xpp::generic::iterator<Connection,
-                       %s,
-                       SIGNATURE(%s_next),
-                       SIGNATURE(%s_sizeof),
-                       SIGNATURE(%s_%s_iterator)>\
+                       %(c_type)s,
+                       xpp::generic::signature<decltype(%(iter_name)s_next), %(iter_name)s_next>,
+                       xpp::generic::signature<decltype(%(iter_name)s_sizeof), %(iter_name)s_sizeof>,
+                       xpp::generic::signature<decltype(%(c_name)s_%(member)s_iterator), %(c_name)s_%(member)s_iterator>>\
 """
 
 _templates['list'] = \
@@ -83,20 +83,20 @@ class Accessor(object):
 
 
     def iter_fixed(self):
-        return_type = self.return_type
-
-        return _templates['iter_fixed'] \
-                % (return_type,
-                   self.c_name, self.member,
-                   self.c_name, self.member)
+        return _templates['iter_fixed'] % {
+            "return_type": self.return_type,
+            "c_name": self.c_name,
+            "member": self.member
+        }
 
 
     def iter_variable(self):
-        return _templates['iter_variable'] \
-                % (self.c_type,
-                   self.iter_name,
-                   self.iter_name,
-                   self.c_name, self.member)
+        return _templates['iter_variable'] % {
+            "c_type": self.c_type,
+            "iter_name": self.iter_name,
+            "c_name": self.c_name,
+            "member": self.member
+        }
 
 
     def list(self, iterator):

@@ -12,67 +12,56 @@ namespace detail {
 template<typename Connection,
          typename Check,
          typename CookieFunction>
-class %s
-  : public xpp::generic::reply<%s<Connection, Check, CookieFunction>,
+class %(name)s
+  : public xpp::generic::reply<%(name)s<Connection, Check, CookieFunction>,
                                Connection,
                                Check,
-                               SIGNATURE(%s_reply),
+                               xpp::generic::signature<decltype(%(c_name)s_reply), %(c_name)s_reply>,
                                CookieFunction>
 {
   public:
-    typedef xpp::generic::reply<%s<Connection, Check, CookieFunction>,
+    typedef xpp::generic::reply<%(name)s<Connection, Check, CookieFunction>,
                                 Connection,
                                 Check,
-                                SIGNATURE(%s_reply),
+                                xpp::generic::signature<decltype(%(c_name)s_reply), %(c_name)s_reply>,
                                 CookieFunction>
                                   base;
 
     template<typename C, typename ... Parameter>
-    %s(C && c, Parameter && ... parameter)
+    %(name)s(C && c, Parameter && ... parameter)
       : base(std::forward<C>(c), std::forward<Parameter>(parameter) ...)
     {}
 
-%s\
-%s\
-}; // class %s
+%(make_static_getter)s\
+%(accessors)s\
+}; // class %(name)s
 
 } // namespace detail
 
 namespace checked {
 template<typename Connection>
-using %s = detail::%s<
+using %(name)s = detail::%(name)s<
     Connection, xpp::generic::checked_tag,
-    SIGNATURE(%s)>;
+    xpp::generic::signature<decltype(%(c_name)s), %(c_name)s>>;
 } // namespace checked
 
 namespace unchecked {
 template<typename Connection>
-using %s = detail::%s<
+using %(name)s = detail::%(name)s<
     Connection, xpp::generic::unchecked_tag,
-    SIGNATURE(%s_unchecked)>;
+    xpp::generic::signature<decltype(%(c_name)s_unchecked), %(c_name)s_unchecked>>;
 } // namespace unchecked
 
 } // namespace reply
 '''
 
 def _reply_class(name, c_name, ns, cookie, accessors):
-    return _templates['reply_class'] % \
-            ( name
-            , name # base class
-            , c_name # %s_reply
-            , name # typedef
-            , c_name # %s_reply
-            , name # c'tor
-            , cookie.make_static_getter()
-            , accessors
-            , name # // class %s
-            , name # checked { using %s =
-            , name # checked { detail::%s
-            , c_name # checked { SIGNATURE
-            , name # unchecked { using %s =
-            , name # unchecked { detail::%s
-            , c_name # unchecked { SIGNATURE
-            )
+    return _templates['reply_class'] % {
+        "name": name,
+        "c_name": c_name,
+        "make_static_getter": cookie.make_static_getter(),
+        "accessors": accessors
+    }
 
 _templates['reply_member_accessor'] = \
 '''\

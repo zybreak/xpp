@@ -210,9 +210,6 @@ def c_open(self):
     if _ns.header.lower() == 'xkb':
         _h('#undef _explicit')
     _h('')
-    _h('#define SIGNATURE(NAME) \\')
-    _h('    xpp::generic::signature<decltype(NAME), NAME>')
-    _h('')
     _h('export module xpp.proto.%s;', get_namespace(_ns).lower())
     _h('')
     _h('import std;')
