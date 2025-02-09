@@ -66,7 +66,7 @@ export namespace xpp { namespace generic {
 
             operator bool(void)
             {
-                return m_reply.operator bool();
+                return get().operator bool();
             }
 
             const Reply &
