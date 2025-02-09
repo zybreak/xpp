@@ -1,4 +1,5 @@
 #include <iostream>
+#include <xcb/xcb.h>
 
 // #include "../request.hpp"
 // #include "../core/connection.hpp"
@@ -12,10 +13,10 @@
 #include <X11/keysym.h>
 #include <X11/cursorfont.h> // XC_cross
 
-#include "../xpp.hpp"
-#include "../proto/randr.hpp"
-#include "../proto/damage.hpp"
-#include "../proto/render.hpp"
+import xpp;
+import xpp.proto.randr;
+import xpp.proto.damage;
+import xpp.proto.render;
 
 
 /*

@@ -2,15 +2,21 @@ cmake_minimum_required(VERSION 3.29.20240416 FATAL_ERROR)
 
 set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD "0e5b6991-d74f-4b3d-a41c-cf096e0b2508")
 
+set(CMAKE_CXX_COMPILER "clang++")
+string(APPEND CMAKE_CXX_FLAGS_INIT " -stdlib=libc++")
+
 project(xpp VERSION 1.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_MODULE_STD ON)
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
 
 #
+string(APPEND CMAKE_CXX_FLAGS " -fexperimental-modules-reduced-bmi -Xclang -fno-validate-pch")
 # Process dependencies
 #
 find_package(PkgConfig)
@@ -216,6 +222,8 @@ target_sources(${PROJECT_NAME} PUBLIC
         src/connection.cppm
         ${PROTO_GEN_FILES}
 )
-target_include_directories(${PROJECT_NAME} INTERFACE ${XPP_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} INTERFACE ${XPP_LIBRARIES})
-target_compile_options(${PROJECT_NAME} INTERFACE ${XCB_DEFINITIONS})
+target_include_directories(${PROJECT_NAME} PUBLIC ${XPP_INCLUDE_DIRS})
+target_link_libraries(${PROJECT_NAME} PUBLIC ${XPP_LIBRARIES})
+target_compile_options(${PROJECT_NAME} PUBLIC ${XCB_DEFINITIONS})
+
+add_subdirectory(tests)

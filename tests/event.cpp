@@ -1,7 +1,7 @@
-#include <iostream>
+#import <xcb/xcb.h>
 
-#include "../event.hpp"
-#include "../connection.hpp"
+import std;
+import xpp;
 
 using namespace xpp;
 using namespace event;

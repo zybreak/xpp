@@ -1,6 +1,7 @@
-#include <iostream>
+#include <xcb/xcb.h>
 
-#include "../connection.hpp"
+import std;
+import xpp;
 
 class test {
   public:
@@ -115,7 +116,7 @@ int main(int argc, char ** argv)
   std::cerr << "#windows (length):       " << tree->length << std::endl;
 
   std::cerr << std::hex;
-  for (auto & window : tree.children()) {
+  for (const auto & window : tree.children()) {
     std::cerr << "0x" << window << "; ";
   }
   std::cerr << std::dec << std::endl;;
@@ -151,5 +152,5 @@ int main(int argc, char ** argv)
   }
   std::cerr << std::dec << std::endl;;
 
-  return EXIT_SUCCESS;
+  return 0;
 }
