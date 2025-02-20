@@ -2,21 +2,40 @@ cmake_minimum_required(VERSION 3.29.20240416 FATAL_ERROR)
 
 set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD "0e5b6991-d74f-4b3d-a41c-cf096e0b2508")
 
-set(CMAKE_CXX_COMPILER "clang++")
-string(APPEND CMAKE_CXX_FLAGS_INIT " -stdlib=libc++")
+# Determine if fmt is built as a subproject (using add_subdirectory)
+# or if it is the master project.
+if (NOT DEFINED XPP_MASTER_PROJECT)
+  set(XPP_MASTER_PROJECT OFF)
+  if (CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_SOURCE_DIR)
+    set(XPP_MASTER_PROJECT ON)
+    message(STATUS "CMake version: ${CMAKE_VERSION}")
+  endif ()
+endif ()
+
+if (XPP_MASTER_PROJECT AND NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release CACHE STRING "Release type")
+endif ()
+
+if(NOT DEFINED CMAKE_CXX_STANDARD)
+  set(CMAKE_CXX_STANDARD 23)
+  set(CMAKE_CXX_STANDARD_REQUIRED ON)
+  set(CMAKE_CXX_EXTENSIONS OFF)
+endif ()
+
+set(CMAKE_CXX_MODULE_STD ON)
 
 project(xpp VERSION 1.0 LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 23)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
-set(CMAKE_CXX_EXTENSIONS OFF)
-set(CMAKE_CXX_MODULE_STD ON)
-set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
+if (XPP_MASTER_PROJECT AND NOT DEFINED CMAKE_CXX_VISIBILITY_PRESET)
+  #set(CMAKE_CXX_VISIBILITY_PRESET hidden)
+endif ()
 
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${PROJECT_SOURCE_DIR}/cmake)
+if (XPP_MASTER_PROJECT AND NOT DEFINED CMAKE_VISIBILITY_INLINES_HIDDEN)
+  #set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
+endif ()
 
 #
-string(APPEND CMAKE_CXX_FLAGS " -fexperimental-modules-reduced-bmi -Xclang -fno-validate-pch")
+#string(APPEND CMAKE_CXX_FLAGS " -fexperimental-modules-reduced-bmi -Xclang -fno-validate-pch")
 # Process dependencies
 #
 find_package(PkgConfig)
@@ -37,22 +56,9 @@ if(NOT PYTHON_EXECUTABLE)
   message(FATAL_ERROR "Missing PYTHON_EXECUTABLE")
 endif()
 
-find_package(XCB REQUIRED XCB ICCCM EWMH UTIL IMAGE)
+find_package(X11 REQUIRED COMPONENTS xcb xcb_icccm xcb_ewmh xcb_util xcb_image)
 
 set(GEN_SRC "${CMAKE_CURRENT_BINARY_DIR}/generated-sources")
-
-set(XPP_INCLUDE_DIRS
-  ${XCB_XCB_INCLUDE_DIR}
-  ${XCB_EWMH_INCLUDE_DIR}
-  ${XCB_ICCCM_INCLUDE_DIR}
-  ${XCB_UTIL_INCLUDE_DIR}
-  ${XCB_IMAGE_INCLUDE_DIR})
-set(XPP_LIBRARIES
-  ${XCB_XCB_LIBRARY}
-  ${XCB_EWMH_LIBRARY}
-  ${XCB_ICCCM_LIBRARY}
-  ${XCB_UTIL_LIBRARY}
-  ${XCB_IMAGE_LIBRARY})
 
 #
 # Loop through a hardcoded list of python executables to locate the python module "xcbgen"
@@ -118,34 +124,22 @@ if(NOT XCB_PROTOS)
 endif()
 
 if("randr" IN_LIST XCB_PROTOS)
-  find_package(XCB REQUIRED RANDR)
-  set(XPP_INCLUDE_DIRS ${XPP_INCLUDE_DIRS} ${XCB_RANDR_INCLUDE_DIR})
-  set(XPP_LIBRARIES ${XPP_LIBRARIES} ${XCB_RANDR_LIBRARY})
+  find_package(X11 REQUIRED COMPONENTS xcb_randr)
 endif()
 if("render" IN_LIST XCB_PROTOS)
-  find_package(XCB REQUIRED RENDER)
-  set(XPP_INCLUDE_DIRS ${XPP_INCLUDE_DIRS} ${XCB_RENDER_INCLUDE_DIR})
-  set(XPP_LIBRARIES ${XPP_LIBRARIES} ${XCB_RENDER_LIBRARY})
+  find_package(X11 REQUIRED COMPONENTS xcb_render)
 endif()
 if("damage" IN_LIST XCB_PROTOS)
-  find_package(XCB REQUIRED DAMAGE)
-  set(XPP_INCLUDE_DIRS ${XPP_INCLUDE_DIRS} ${XCB_DAMAGE_INCLUDE_DIR})
-  set(XPP_LIBRARIES ${XPP_LIBRARIES} ${XCB_DAMAGE_LIBRARY})
+  find_package(X11 REQUIRED COMPONENTS xcb_damage)
 endif()
 if("sync" IN_LIST XCB_PROTOS)
-  find_package(XCB REQUIRED SYNC)
-  set(XPP_INCLUDE_DIRS ${XPP_INCLUDE_DIRS} ${XCB_SYNC_INCLUDE_DIR})
-  set(XPP_LIBRARIES ${XPP_LIBRARIES} ${XCB_SYNC_LIBRARY})
+  find_package(X11 REQUIRED COMPONENTS xcb_sync)
 endif()
 if("composite" IN_LIST XCB_PROTOS)
-  find_package(XCB REQUIRED COMPOSITE)
-  set(XPP_INCLUDE_DIRS ${XPP_INCLUDE_DIRS} ${XCB_COMPOSITE_INCLUDE_DIR})
-  set(XPP_LIBRARIES ${XPP_LIBRARIES} ${XCB_COMPOSITE_LIBRARY})
+  find_package(X11 REQUIRED COMPONENTS xcb_composite)
 endif()
 if("xkb" IN_LIST XCB_PROTOS)
-  find_package(XCB REQUIRED XKB)
-  set(XPP_INCLUDE_DIRS ${XPP_INCLUDE_DIRS} ${XCB_XKB_INCLUDE_DIR})
-  set(XPP_LIBRARIES ${XPP_LIBRARIES} ${XCB_XKB_LIBRARY})
+  find_package(X11 REQUIRED COMPONENTS xcb_xkb)
 endif()
 
 set(PROTO_LIST)
@@ -158,7 +152,7 @@ file(GLOB PROTO_LIST_RAW RELATIVE ${XCBPROTO_XCBINCLUDEDIR} ${XCBPROTO_XCBINCLUD
 foreach(PROTO_RAW ${PROTO_LIST_RAW})
   string(REGEX REPLACE "(^xf86vidmode.xml|^ge.xml|.xml)\$" "" PROTO ${PROTO_RAW})
   if(PROTO AND "${PROTO}" IN_LIST XCB_PROTOS)
-    message(STATUS "${PROJECT_NAME}: including xcb proto ${PROTO_RAW}")
+    message(STATUS "xpp: including xcb proto ${PROTO_RAW}")
     set(PROTO_LIST ${PROTO_LIST} ${PROTO})
   endif()
 endforeach(PROTO_RAW)
@@ -166,24 +160,20 @@ endforeach(PROTO_RAW)
 #
 # Add commands
 #
-set(PROTO_GEN_DIR "${GEN_SRC}/xpp/proto")
+set(PROTO_GEN_DIR "${GEN_SRC}/proto")
 file(MAKE_DIRECTORY ${PROTO_GEN_DIR})
 set(PROTO_GEN_FILES "")
 foreach(PROTO ${PROTO_LIST})
     string(REGEX REPLACE "proto\$" "" PROTO_OUTPUT ${PROTO})
     set(OUTPUT_FILE ${PROTO_GEN_DIR}/${PROTO_OUTPUT}.cppm)
-    #execute_process(
-    #        OUTPUT_FILE ${OUTPUT_FILE}
-    #        COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/generators/cpp_client.py -p "${PYTHON_XCBGEN}"
-    #        ${XCBPROTO_XCBINCLUDEDIR}/${PROTO}.xml > ${OUTPUT_FILE}
-    #        RESULT_VARIABLE result)
-    #if(NOT result EQUAL 0)
-    #    message(FATAL_ERROR "xcb-gen failed")
-    #endif()
-    add_custom_command(
-            OUTPUT ${OUTPUT_FILE}
+    execute_process(
+            OUTPUT_FILE ${OUTPUT_FILE}
             COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/generators/cpp_client.py -p "${PYTHON_XCBGEN}"
-            ${XCBPROTO_XCBINCLUDEDIR}/${PROTO}.xml > ${OUTPUT_FILE})
+            ${XCBPROTO_XCBINCLUDEDIR}/${PROTO}.xml > ${OUTPUT_FILE}
+            RESULT_VARIABLE result)
+    if(NOT result EQUAL 0)
+        message(FATAL_ERROR "xcb-gen failed")
+    endif()
     list(APPEND PROTO_GEN_FILES ${OUTPUT_FILE})
 endforeach(PROTO)
 
@@ -191,8 +181,22 @@ endforeach(PROTO)
 #
 # Create project lib and commands
 #
-add_library(${PROJECT_NAME} STATIC)
-target_sources(${PROJECT_NAME} PUBLIC
+include(GenerateExportHeader)
+include(CMakePackageConfigHelpers)
+include(GNUInstallDirs)
+
+add_library(xpp)
+add_library(xpp::xpp ALIAS xpp)
+
+set_target_properties(xpp PROPERTIES
+        SOVERSION ${PROJECT_VERSION_MAJOR}
+        VERSION ${PROJECT_VERSION}
+)
+
+set_target_properties(xpp PROPERTIES LINKER_LANGUAGE CXX)
+
+generate_export_header(xpp)
+target_sources(xpp PUBLIC
         FILE_SET cxx_modules TYPE CXX_MODULES
         BASE_DIRS src ${GEN_SRC}
         FILES
@@ -222,8 +226,38 @@ target_sources(${PROJECT_NAME} PUBLIC
         src/connection.cppm
         ${PROTO_GEN_FILES}
 )
-target_include_directories(${PROJECT_NAME} PUBLIC ${XPP_INCLUDE_DIRS})
-target_link_libraries(${PROJECT_NAME} PUBLIC ${XPP_LIBRARIES})
-target_compile_options(${PROJECT_NAME} PUBLIC ${XCB_DEFINITIONS})
+target_include_directories(xpp PUBLIC ${X11_INCLUDE_DIR})
+target_link_libraries(xpp PUBLIC ${X11_LIBRARIES})
+target_compile_features(xpp PUBLIC cxx_std_23)
 
-add_subdirectory(tests)
+set(targets_export_name xpp-targets)
+write_basic_package_version_file(
+  ${PROJECT_BINARY_DIR}/xpp-config-version.cmake
+  VERSION ${PROJECT_VERSION}
+  COMPATIBILITY SameMajorVersion)
+
+configure_package_config_file(
+    ${PROJECT_SOURCE_DIR}/cmake/xpp-config.cmake.in
+    ${PROJECT_BINARY_DIR}/xpp-config.cmake
+    INSTALL_DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/xpp)
+
+# Use a namespace because CMake provides better diagnostics for namespaced
+# imported targets.
+export(TARGETS xpp NAMESPACE xpp::
+        FILE ${PROJECT_BINARY_DIR}/${targets_export_name}.cmake)
+
+install(EXPORT ${targets_export_name}
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/xpp
+        NAMESPACE xpp::
+        CXX_MODULES_DIRECTORY .)
+
+install(TARGETS xpp
+    EXPORT ${targets_export_name}
+    FILE_SET cxx_modules DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/xpp/src
+    LIBRARY           DESTINATION ${CMAKE_INSTALL_LIBDIR}
+    ARCHIVE           DESTINATION ${CMAKE_INSTALL_LIBDIR}
+)
+
+install(FILES ${PROJECT_BINARY_DIR}/xpp-config-version.cmake ${PROJECT_BINARY_DIR}/xpp-config.cmake
+        DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/xpp)
+#add_subdirectory(tests)
