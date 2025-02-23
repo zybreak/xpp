@@ -1,7 +1,7 @@
-from conan import ConanFile
 import os
+from conan import ConanFile
 from conan.tools.cmake import CMakeToolchain, CMake, cmake_layout, CMakeDeps
-
+from conan.tools.build import check_min_cppstd
 
 class xppRecipe(ConanFile):
     name = "xpp"
@@ -13,7 +13,7 @@ class xppRecipe(ConanFile):
     author = "Robert Knutsson zybreak@gmail.com"
     url = "github.com/zybreak/xpp"
     description = "A C++23 RAII wrapper for XCB"
-    topics = ("x11", "xcb")
+    topics = ("x11", "xorg", "xcb")
 
     # Binary configuration
     settings = "os", "compiler", "build_type", "arch"
@@ -21,11 +21,14 @@ class xppRecipe(ConanFile):
     default_options = {"shared": False, "fPIC": True}
 
     # Sources are located in the same place as this recipe, copy them to the recipe
-    exports_sources = "CMakeLists.txt", "src/*", "generators/*", "cmake/*"
+    exports_sources = "CMakeLists.txt", "src/*", "generators/*", "cmake/*", "tests/*", "LICENSE"
 
     def configure(self):
         if self.options.shared:
             self.options.rm_safe("fPIC")
+
+    def validate(self):
+        check_min_cppstd(self, "23")
 
     def layout(self):
         cmake_layout(self)
@@ -45,6 +48,7 @@ class xppRecipe(ConanFile):
     def build_requirements(self):
         self.tool_requires("cmake/[>=3.30]")
         self.tool_requires("ninja/[>=1.12]")
+        self.test_requires("gtest/1.15.0")
 
     def package(self):
         cmake = CMake(self)

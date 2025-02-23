@@ -1,7 +1,7 @@
 #
 # Create test executable
 #
-find_package(GTest CONFIG)
+find_package(GTest CONFIG REQUIRED)
 
 include(GoogleTest)
 

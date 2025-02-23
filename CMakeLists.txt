@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.29.20240416 FATAL_ERROR)
+cmake_minimum_required(VERSION 3.31 FATAL_ERROR)
 
 set(CMAKE_EXPERIMENTAL_CXX_IMPORT_STD "0e5b6991-d74f-4b3d-a41c-cf096e0b2508")
 
@@ -57,6 +57,7 @@ if(NOT PYTHON_EXECUTABLE)
 endif()
 
 find_package(X11 REQUIRED COMPONENTS xcb xcb_icccm xcb_ewmh xcb_util xcb_image)
+list(APPEND libraries X11 X11::xcb X11::xcb_icccm X11::xcb_ewmh X11::xcb_util X11::xcb_image)
 
 set(GEN_SRC "${CMAKE_CURRENT_BINARY_DIR}/generated-sources")
 
@@ -125,21 +126,27 @@ endif()
 
 if("randr" IN_LIST XCB_PROTOS)
   find_package(X11 REQUIRED COMPONENTS xcb_randr)
+  list(APPEND libraries X11::xcb_randr)
 endif()
 if("render" IN_LIST XCB_PROTOS)
   find_package(X11 REQUIRED COMPONENTS xcb_render)
+  list(APPEND libraries X11::xcb_render)
 endif()
 if("damage" IN_LIST XCB_PROTOS)
   find_package(X11 REQUIRED COMPONENTS xcb_damage)
+  list(APPEND libraries X11::xcb_damage)
 endif()
 if("sync" IN_LIST XCB_PROTOS)
   find_package(X11 REQUIRED COMPONENTS xcb_sync)
+  list(APPEND libraries X11::xcb_sync)
 endif()
 if("composite" IN_LIST XCB_PROTOS)
   find_package(X11 REQUIRED COMPONENTS xcb_composite)
+  list(APPEND libraries X11::xcb_composite)
 endif()
 if("xkb" IN_LIST XCB_PROTOS)
   find_package(X11 REQUIRED COMPONENTS xcb_xkb)
+  list(APPEND libraries X11::xcb_xkb)
 endif()
 
 set(PROTO_LIST)
@@ -174,6 +181,12 @@ foreach(PROTO ${PROTO_LIST})
     if(NOT result EQUAL 0)
         message(FATAL_ERROR "xcb-gen failed")
     endif()
+    #add_custom_command(
+    #        OUTPUT ${OUTPUT_FILE}
+    #        CODEGEN
+    #        COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/generators/cpp_client.py -p "${PYTHON_XCBGEN}"
+    #        ${XCBPROTO_XCBINCLUDEDIR}/${PROTO}.xml > ${OUTPUT_FILE})
+    set_source_files_properties(${OUTPUT_FILE} PROPERTIES GENERATED TRUE)
     list(APPEND PROTO_GEN_FILES ${OUTPUT_FILE})
 endforeach(PROTO)
 
@@ -196,7 +209,8 @@ set_target_properties(xpp PROPERTIES
 set_target_properties(xpp PROPERTIES LINKER_LANGUAGE CXX)
 
 generate_export_header(xpp)
-target_sources(xpp PUBLIC
+target_sources(xpp
+        PUBLIC
         FILE_SET cxx_modules TYPE CXX_MODULES
         BASE_DIRS src ${GEN_SRC}
         FILES
@@ -226,8 +240,7 @@ target_sources(xpp PUBLIC
         src/connection.cppm
         ${PROTO_GEN_FILES}
 )
-target_include_directories(xpp PUBLIC ${X11_INCLUDE_DIR})
-target_link_libraries(xpp PUBLIC ${X11_LIBRARIES})
+target_link_libraries(xpp PUBLIC ${libraries})
 target_compile_features(xpp PUBLIC cxx_std_23)
 
 set(targets_export_name xpp-targets)
@@ -260,4 +273,7 @@ install(TARGETS xpp
 
 install(FILES ${PROJECT_BINARY_DIR}/xpp-config-version.cmake ${PROJECT_BINARY_DIR}/xpp-config.cmake
         DESTINATION ${CMAKE_INSTALL_LIBDIR}/cmake/xpp)
-#add_subdirectory(tests)
+
+install(FILES ${CMAKE_CURRENT_LIST_DIR}/LICENSE DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/xpp)
+
+add_subdirectory(tests)

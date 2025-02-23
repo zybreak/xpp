@@ -1,8 +1,6 @@
 @PACKAGE_INIT@
 
-message(STATUS "XPP: Loading xpp-config")
 if (NOT TARGET xpp::xpp)
-    message(STATUS "XPP: Not target xpp::xpp")
   include(${CMAKE_CURRENT_LIST_DIR}/@targets_export_name@.cmake)
 endif ()
 
