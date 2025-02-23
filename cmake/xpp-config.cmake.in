@@ -1,4 +1,9 @@
+set(XPP_VERSION @CMAKE_PROJECT_VERSION@)
+
 @PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+@DEPENDENCIES@
 
 if (NOT TARGET xpp::xpp)
   include(${CMAKE_CURRENT_LIST_DIR}/@targets_export_name@.cmake)
