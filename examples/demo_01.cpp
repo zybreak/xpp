@@ -2,13 +2,13 @@
 // and then print every key press and release event. Will exit when Escape is
 // pressed
 
-#include <iostream>
-
+#include <xcb/xcb.h>
 #include <X11/Xlib.h> // XKeysymToString
 #include <X11/keysym.h> // XK_Escape
 #include <X11/cursorfont.h> // XC_cross
 
-#include "../xpp.hpp"
+import std;
+import xpp;
 
 // global variable to indicate whether the event loop should exit
 bool g_quit = false;
@@ -131,8 +131,8 @@ int main(int, char **)
     std::cerr << "Exception (std::exception) in "
               << __FILE__ << " @ line " << __LINE__ << ", what(): "
               << error.what() << std::endl;
-    std::exit(EXIT_FAILURE);
+    std::exit(1);
   }
 
-  return EXIT_SUCCESS;
+  return 0;
 }

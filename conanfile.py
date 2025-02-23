@@ -5,7 +5,7 @@ from conan.tools.build import check_min_cppstd
 
 class xppRecipe(ConanFile):
     name = "xpp"
-    version = "1.0"
+    version = "1.0.0"
     package_type = "library"
 
     # Optional metadata

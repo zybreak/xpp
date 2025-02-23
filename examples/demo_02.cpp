@@ -1,9 +1,11 @@
-#include <iostream>
+#include <xcb/xcb.h>
+#include <xcb/randr.h>
 
-#include "../xpp.hpp"
-#include "../proto/randr.hpp"
-#include "../proto/damage.hpp"
-#include "../proto/render.hpp"
+import std;
+import xpp;
+import xpp.proto.randr;
+import xpp.proto.damage;
+import xpp.proto.render;
 
 // typedefs for convenience
 namespace x {
@@ -39,6 +41,7 @@ int main(int, char **)
   }
   std::cerr << std::endl;
 
+#if 0
   // Print out all available fonts
   auto && fonts = connection.list_fonts(8, 1, "*").names();
   std::cerr << "fonts "
@@ -48,6 +51,7 @@ int main(int, char **)
     std::cerr << "font [" << name.length() << "]: " << name << std::endl;
   }
   std::cerr << std::endl;
+#endif
 
   // Print all windows and their subwindows
   auto tree = connection.root<x::window>().query_tree();
@@ -69,6 +73,7 @@ int main(int, char **)
   }
   std::cerr << std::endl;
 
+#if 0
   // Creates an atom called "XPP_STRING_PROPERTY_DEMO" with a string property
   // "xpp is working" on the root window
   // check with `xprop -root XPP_STRING_PROPERTY_DEMO`
@@ -102,6 +107,7 @@ int main(int, char **)
     std::cerr << "change property failed: " << e.what() << std::endl;
   }
   std::cerr << std::endl;
+#endif
 
   // Get the _NET_CLIENT_LIST_STACKING property
   // If an error occurs, it will be thrown only when trying to access the reply
@@ -225,5 +231,5 @@ int main(int, char **)
     }
   }
 
-  return EXIT_SUCCESS;
+  return 0;
 }
