@@ -78,13 +78,7 @@ export namespace xpp {
                        Object,
                        xpp::generic::signature<NextTemplate, Next>,
                        xpp::generic::signature<SizeOfTemplate, SizeOf>,
-                       xpp::generic::signature<GetIteratorTemplate, GetIterator>>
-            : public std::iterator<typename std::input_iterator_tag,
-                                   Object,
-                                   typename std::size_t,
-                                   Object *,
-                                   const Object &>
-        {
+                       xpp::generic::signature<GetIteratorTemplate, GetIterator>> {
           protected:
             using self = iterator<Connection,
                                   Object,
@@ -103,6 +97,13 @@ export namespace xpp {
             XcbIterator m_iterator;
 
           public:
+
+            typedef Object value_type;
+            typedef typename std::size_t difference_type;
+            typedef Object* pointer;
+            typedef const Object & reference;
+            typedef typename std::input_iterator_tag iterator_category;
+
             iterator(void) {}
 
             template<typename C>
@@ -203,13 +204,7 @@ export namespace xpp {
         class iterator<Connection,
                        Object,
                        signature<AccessorTemplate, Accessor>,
-                       signature<LengthTemplate, Length>>
-            : public std::iterator<typename std::input_iterator_tag,
-                                   Object,
-                                   typename std::size_t,
-                                   Object *,
-                                   const Object &>
-        {
+                       signature<LengthTemplate, Length>> {
           protected:
 
             using accessor_traits = detail::function_traits<AccessorTemplate>;
@@ -226,6 +221,13 @@ export namespace xpp {
             std::shared_ptr<Reply> m_reply;
 
           public:
+
+            typedef Object value_type;
+            typedef typename std::size_t difference_type;
+            typedef Object* pointer;
+            typedef const Object& reference;
+            typedef typename std::input_iterator_tag iterator_category;
+
             typedef iterator<Connection,
                              Object,
                              signature<AccessorTemplate, Accessor>,
