@@ -289,5 +289,5 @@ install(FILES ${PROJECT_BINARY_DIR}/xpp-config-version.cmake ${PROJECT_BINARY_DI
 
 install(FILES ${CMAKE_CURRENT_LIST_DIR}/LICENSE DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/xpp)
 
-add_subdirectory(tests)
+add_subdirectory(tests EXCLUDE_FROM_ALL)
 add_subdirectory(examples EXCLUDE_FROM_ALL)
