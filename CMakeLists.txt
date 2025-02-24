@@ -188,11 +188,11 @@ foreach(PROTO ${PROTO_LIST})
     if(NOT result EQUAL 0)
         message(FATAL_ERROR "xcb-gen failed")
     endif()
-    #add_custom_command(
-    #        OUTPUT ${OUTPUT_FILE}
-    #        CODEGEN
-    #        COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/generators/cpp_client.py -p "${PYTHON_XCBGEN}"
-    #        ${XCBPROTO_XCBINCLUDEDIR}/${PROTO}.xml > ${OUTPUT_FILE})
+    add_custom_command(
+            OUTPUT ${OUTPUT_FILE}
+            CODEGEN
+            COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/generators/cpp_client.py -p "${PYTHON_XCBGEN}"
+            ${XCBPROTO_XCBINCLUDEDIR}/${PROTO}.xml > ${OUTPUT_FILE})
     set_source_files_properties(${OUTPUT_FILE} PROPERTIES GENERATED TRUE)
     list(APPEND PROTO_GEN_FILES ${OUTPUT_FILE})
 endforeach(PROTO)
@@ -222,7 +222,7 @@ endforeach ()
 string(APPEND DEPENDENCIES ")\n")
 
 generate_export_header(xpp)
-target_sources(xpp
+target_sources(xpp PRIVATE src/core.cpp
         PUBLIC
         FILE_SET cxx_modules TYPE CXX_MODULES
         BASE_DIRS src ${GEN_SRC}
