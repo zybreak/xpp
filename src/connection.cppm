@@ -9,22 +9,22 @@ import xpp.generic.error;
 import xpp.generic.factory;
 import xpp.proto.x;
 
+namespace xpp::detail {
+    
+    template <typename Connection, typename... Extensions>
+    class interfaces
+        : public xpp::x::extension::interface<interfaces<Connection, Extensions...>, Connection>,
+          public Extensions::template interface<interfaces<Connection, Extensions...>, Connection>... {
+      public:
+        Connection
+        connection(void) const {
+            return static_cast<Connection const &>(*this);
+        }
+    };  // class interfaces
+
+};  // namespace detail
+
 export namespace xpp {
-
-    namespace detail {
-
-        template <typename Connection, typename... Extensions>
-        class interfaces
-            : public xpp::x::extension::interface<interfaces<Connection, Extensions...>, Connection>,
-              public Extensions::template interface<interfaces<Connection, Extensions...>, Connection>... {
-          public:
-            Connection
-            connection(void) const {
-                return static_cast<Connection const &>(*this);
-            }
-        };  // class interfaces
-
-    }  // namespace detail
 
     template <typename... Extensions>
     class connection

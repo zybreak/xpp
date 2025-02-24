@@ -3,34 +3,36 @@ module;
 export module xpp.generic.error;
 
 import std;
+export namespace xpp::generic {
+    
+    class error_dispatcher {
+      public:
+        virtual void operator()(std::shared_ptr<xcb_generic_error_t> const &) const = 0;
+    };
+};
+
+namespace xpp::generic::detail {
+
+    template <typename Object>
+    void
+    dispatch(Object const &object,
+             std::shared_ptr<xcb_generic_error_t> const &error,
+             std::true_type) {
+        static_cast<xpp::generic::error_dispatcher const &>(object)(error);
+    }
+
+    template <typename Object>
+    void
+    dispatch(Object const &,
+             std::shared_ptr<xcb_generic_error_t> const &error,
+             std::false_type) {
+        throw error;
+    }
+
+};  // namespace detail
 
 export namespace xpp {
     namespace generic {
-
-        class error_dispatcher {
-          public:
-            virtual void operator()(std::shared_ptr<xcb_generic_error_t> const &) const = 0;
-        };
-
-        namespace detail {
-
-            template <typename Object>
-            void
-            dispatch(Object const &object,
-                     std::shared_ptr<xcb_generic_error_t> const &error,
-                     std::true_type) {
-                static_cast<xpp::generic::error_dispatcher const &>(object)(error);
-            }
-
-            template <typename Object>
-            void
-            dispatch(Object const &,
-                     std::shared_ptr<xcb_generic_error_t> const &error,
-                     std::false_type) {
-                throw error;
-            }
-
-        }  // namespace detail
 
         template <typename Object>
         void

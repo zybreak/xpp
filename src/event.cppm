@@ -5,30 +5,30 @@ export module xpp.event;
 import std;
 import xpp.proto.x;
 
+namespace xpp::event::detail {
+    
+    class dispatcher {
+      public:
+        virtual ~dispatcher(void) {
+        }
+        template <typename Event>
+        void dispatch(Event const &e);
+    };  // class dispatcher
+
+    template <typename Event>
+    class sink : virtual public dispatcher {
+      public:
+        virtual ~sink(void) {
+        }
+        virtual void handle(Event const &) = 0;
+    };
+
+};  // namespace detail
+
 export {
     namespace xpp {
 
         namespace event {
-
-            namespace detail {
-
-                class dispatcher {
-                  public:
-                    virtual ~dispatcher(void) {
-                    }
-                    template <typename Event>
-                    void dispatch(Event const &e);
-                };  // class dispatcher
-
-                template <typename Event>
-                class sink : virtual public dispatcher {
-                  public:
-                    virtual ~sink(void) {
-                    }
-                    virtual void handle(Event const &) = 0;
-                };
-
-            }  // namespace detail
 
             template <typename Event, typename... Events>
             class sink

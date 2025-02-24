@@ -4,30 +4,30 @@ export module xpp.generic.resource;
 
 import std;
 
+namespace xpp::generic::detail {
+
+    template <typename Connection, typename Resource, typename ResourceId,
+        template <typename, typename> class... Interfaces>
+    class interfaces
+        : public Interfaces<interfaces<Connection, Resource, ResourceId, Interfaces...>,
+            Connection>... {
+      public:
+        ResourceId const &
+        resource(void) const {
+            return *static_cast<Resource const &>(*this);
+        }
+
+        Connection
+        connection(void) const {
+            return static_cast<Resource const &>(*this).connection();
+        }
+    };  // class interfaces
+
+};
+
 export namespace xpp {
 
     namespace generic {
-
-        namespace detail {
-
-            template <typename Connection, typename Resource, typename ResourceId,
-                      template <typename, typename> class... Interfaces>
-            class interfaces
-                : public Interfaces<interfaces<Connection, Resource, ResourceId, Interfaces...>,
-                                    Connection>... {
-              public:
-                ResourceId const &
-                resource(void) const {
-                    return *static_cast<Resource const &>(*this);
-                }
-
-                Connection
-                connection(void) const {
-                    return static_cast<Resource const &>(*this).connection();
-                }
-            };  // class interfaces
-
-        }  // namespace detail
 
         template <typename Connection, typename ResourceId,
                   template <typename, typename> class... Interfaces>

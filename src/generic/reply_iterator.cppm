@@ -7,6 +7,30 @@ import xpp.generic.factory;
 import xpp.generic.signature;
 import xpp.generic.iterator_traits;
 
+namespace xpp::generic::detail {
+    
+    template <typename F>
+    struct function_traits;
+
+    template <typename Signature, Signature& S>
+    struct function_traits<signature<Signature, S>> : function_traits<Signature> {};
+
+    template <typename R, typename... Args>
+    struct function_traits<R (*)(Args...)> : function_traits<R(Args...)> {};
+
+    template <typename R, typename... Args>
+    struct function_traits<R(Args...)> {
+        using result_type = R;
+        static std::size_t const arity = sizeof...(Args);
+
+        template <std::size_t I>
+        struct argument {
+            static_assert(I < arity, "invalid argument index");
+            using type = typename std::tuple_element<I, std::tuple<Args...>>::type;
+        };
+    };
+}  // namespace detail
+
 export namespace xpp {
 
     namespace generic {
@@ -29,30 +53,6 @@ export namespace xpp {
                                    xcb_str_name_length(data));
             }
         };
-
-        namespace detail {
-
-            template <typename F>
-            struct function_traits;
-
-            template <typename Signature, Signature& S>
-            struct function_traits<signature<Signature, S>> : function_traits<Signature> {};
-
-            template <typename R, typename... Args>
-            struct function_traits<R (*)(Args...)> : function_traits<R(Args...)> {};
-
-            template <typename R, typename... Args>
-            struct function_traits<R(Args...)> {
-                using result_type = R;
-                static std::size_t const arity = sizeof...(Args);
-
-                template <std::size_t I>
-                struct argument {
-                    static_assert(I < arity, "invalid argument index");
-                    using type = typename std::tuple_element<I, std::tuple<Args...>>::type;
-                };
-            };
-        }  // namespace detail
 
         // iterator for variable size data fields
 
