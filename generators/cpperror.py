@@ -11,7 +11,7 @@ _templates['error_dispatcher_class'] = \
 '''\
 namespace error {
 
-class dispatcher
+export class dispatcher
 {
   public:
 %s\
@@ -119,17 +119,17 @@ class CppError(object):
         self.opcode = opcode
         self.opcode_name = opcode_name
 
-        self.names = list(map(str.lower, _n_item(name[-1], True)))
+        self.names = list(map(_reserved_keywords.get(str, str), map(str.lower, _n_item(name[-1], True))))
         self.name = "_".join(self.names)
 
         self.nssopen = ""
         self.nssclose = ""
         self.scope = []
         for name in self.names[0:-1]:
-            if name in _reserved_keywords: name += "_"
-            self.nssopen += " namespace %s {" % name
-            self.nssclose += " }"
             self.scope.append(name)
+
+        self.nssopen += " namespace %s {" % "::".join(self.names)
+        self.nssclose += " }"
 
     def get_name(self):
         return _reserved_keywords.get(self.name, self.name)
@@ -192,28 +192,28 @@ class CppError(object):
 '''
 namespace error {
 class %s
-  : public xpp::generic::error<%s,
-                               %s>
+  : public xpp::generic::error<%s>
 {
   public:
 %s\
-    using xpp::generic::error<%s, %s>::error;
 
+    %s(std::shared_ptr<xcb_generic_error_t> const &error) : xpp::generic::error<%s>(error) {}
+    
     virtual ~%s(void) {}
 
 %s
-    static std::string description(void)
+    std::string_view description(void) const noexcept override
     {
-      return std::string("%s");
+      return "%s";
     }
 %s\
 }; // class %s
 } // namespace error
 ''' % (self.get_name(), # class %s
-       self.get_name(), # : public xpp::generic::error<%s,
        self.c_name, # %s>
        typedef,
-       self.get_name(), self.c_name, # using xpp::generic::error<%s, %s>::error;
+       self.get_name(), #%s(void) {}
+       self.c_name, # %s>
        self.get_name(), # virtual ~%s(void) {}
        opcode_accessor,
        self.opcode_name, # static constexpr const char * opcode_literal

@@ -219,11 +219,11 @@ def c_open(self):
 
     _h('import xpp.generic;')
 
+    _h('')
     # if not _ns.is_ext:
     #     _h('#include "xproto-stub.hpp"')
     # _h('#include "../core/generic/resource.hpp"')
-    _h('export {')
-    _h('namespace xpp { namespace %s {' % get_namespace(_ns))
+    _h('namespace xpp::%s {' % get_namespace(_ns))
     # _h('class window;')
     # _h('namespace %s {', get_namespace(_ns))
     # _h('')
@@ -265,9 +265,8 @@ def c_close(self):
 
     _h('')
     # _h('}; // namespace xpp')
-    _h("} } // namespace xpp::%s" % get_namespace(_ns))
+    _h("} // namespace xpp::%s" % get_namespace(_ns))
 
-    _h('}')
     _h('')
     #_h('#endif // XPP_%s_HPP', get_namespace(_ns).upper())
 

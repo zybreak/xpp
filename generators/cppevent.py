@@ -50,6 +50,7 @@ _templates['event_dispatcher_class'] = \
 '''\
 namespace event {
 
+export
 template<typename Connection>
 class dispatcher
 {
@@ -198,17 +199,17 @@ class CppEvent(object):
         self.namespace = namespace
         self.fields = fields
 
-        self.names = list(map(str.lower, _n_item(name[-1], True)))
+        self.names = list(map(_reserved_keywords.get(str, str), map(str.lower, _n_item(name[-1], True))))
         self.name = "_".join(self.names)
 
         self.nssopen = ""
         self.nssclose = ""
         self.scope = []
         for name in self.names[0:-1]:
-            if name in _reserved_keywords: name += "_"
-            self.nssopen += " namespace %s {" % name
-            self.nssclose += " };"
             self.scope.append(name)
+            
+        self.nssopen += " namespace %s {" % "::".join(self.names)
+        self.nssclose += " }"
 
     def __cmp__(self, other):
         if self.opcode == other.opcode:

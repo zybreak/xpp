@@ -4,6 +4,7 @@ _templates = {}
 
 _templates['void_cookie_function'] = \
 '''\
+export
 %s\
 void
 %s_checked(Connection && c%s)
@@ -13,6 +14,7 @@ void
       %s_checked(std::forward<Connection>(c)%s));
 }
 
+export
 %s\
 void
 %s(Connection && c%s)

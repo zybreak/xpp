@@ -45,6 +45,7 @@ class ObjectClass(object):
         else:
             return \
 """\
+export
 template<typename Derived, typename Connection>
 class %s
 {

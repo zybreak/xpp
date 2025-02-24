@@ -11,6 +11,7 @@ _templates = {}
 
 _templates['void_request_function'] = \
 '''\
+export
 template<typename Connection, typename ... Parameter>
 void
 %s_checked(Connection && c, Parameter && ... parameter)
@@ -22,6 +23,7 @@ void
           std::forward<Parameter>(parameter) ...));
 }
 
+export
 template<typename ... Parameter>
 void
 %s(Parameter && ... parameter)
@@ -41,6 +43,7 @@ def _void_request_function(ns, name, c_name):
 
 _templates['reply_request_function'] = \
 '''\
+export
 template<typename Connection, typename ... Parameter>
 reply::checked::%s<Connection>
 %s(Connection && c, Parameter && ... parameter)
@@ -49,6 +52,7 @@ reply::checked::%s<Connection>
       std::forward<Connection>(c), std::forward<Parameter>(parameter) ...);
 }
 
+export
 template<typename Connection, typename ... Parameter>
 reply::unchecked::%s<Connection>
 %s_unchecked(Connection && c, Parameter && ... parameter)

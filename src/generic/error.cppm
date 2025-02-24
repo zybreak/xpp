@@ -43,15 +43,20 @@ export namespace xpp {
                              std::is_base_of<xpp::generic::error_dispatcher, Object>());
         }
 
-        template <typename Derived, typename Error>
-        class error
-            : public std::runtime_error {
+        template <typename Error>
+        class error : public std::exception {
           public:
-            error(std::shared_ptr<xcb_generic_error_t> const &error)
-                : runtime_error(get_error_description(error.get())), m_error(error) {
+            error(std::shared_ptr<xcb_generic_error_t> const &error) : m_error(error) {
             }
 
             virtual ~error(void) {
+            }
+            
+            virtual std::string_view description() const noexcept = 0;
+            
+            virtual char const * what() const noexcept {
+                static std::string desc = std::string(description()) + " (" + std::to_string(m_error.get()->error_code) + ")";
+                return desc.c_str();
             }
 
             virtual
@@ -70,11 +75,6 @@ export namespace xpp {
             }
 
           protected:
-            virtual std::string
-            get_error_description(xcb_generic_error_t *error) const {
-                return std::string(Derived::description()) + " (" + std::to_string(error->error_code) + ")";
-            }
-
             std::shared_ptr<xcb_generic_error_t> m_error;
         };  // class error
 
