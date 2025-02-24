@@ -344,6 +344,7 @@ class CppEvent(object):
         return \
 '''
 namespace event {
+export
 template<typename Connection>
 class %s
   : public xpp::generic::event<%s>
