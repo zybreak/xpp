@@ -13,6 +13,7 @@ _templates = {}
 
 _templates['interface_class'] = \
 """\
+export
 template<typename Derived, typename Connection>
 class interface
 {

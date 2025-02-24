@@ -23,12 +23,14 @@ class ExtensionClass(object):
 
         return \
 '''\
+export
 template<typename Derived, typename Connection>
 class interface;
 
-namespace event { template<typename Connection> class dispatcher; }
-namespace error { class dispatcher; }
+namespace event { export template<typename Connection> class dispatcher; }
+namespace error { export class dispatcher; }
 
+export
 class extension%s{
   public:
 %s\
