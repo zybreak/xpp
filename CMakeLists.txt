@@ -35,26 +35,8 @@ if (XPP_MASTER_PROJECT AND NOT DEFINED CMAKE_VISIBILITY_INLINES_HIDDEN)
 endif ()
 
 #
-#string(APPEND CMAKE_CXX_FLAGS " -fexperimental-modules-reduced-bmi -Xclang -fno-validate-pch")
 # Process dependencies
 #
-find_package(PkgConfig)
-pkg_check_modules(XCBPROTO REQUIRED xcb-proto)
-
-# Store the location of the proto xml files inside XCBPROTO_XCBINCLUDEDIR
-pkg_get_variable(XCBPROTO_XCBINCLUDEDIR xcb-proto xcbincludedir)
-
-# Search for a python interpreter, if the user didn't specify any
-if(NOT PYTHON_EXECUTABLE)
-  find_package(Python3 REQUIRED COMPONENTS Interpreter)
-  if(Python3_FOUND)
-    set(PYTHON_EXECUTABLE "${Python3_EXECUTABLE}")
-  endif()
-endif()
-
-if(NOT PYTHON_EXECUTABLE)
-  message(FATAL_ERROR "Missing PYTHON_EXECUTABLE")
-endif()
 
 find_package(X11 REQUIRED COMPONENTS xcb xcb_icccm xcb_ewmh xcb_util xcb_image)
 list(APPEND X11_DEPENDENCIES xcb xcb_icccm xcb_ewmh xcb_util xcb_image)
@@ -62,30 +44,31 @@ list(APPEND libraries X11 X11::xcb X11::xcb_icccm X11::xcb_ewmh X11::xcb_util X1
 
 set(GEN_SRC "${CMAKE_CURRENT_BINARY_DIR}/generated-sources")
 
+find_package(PkgConfig)
+pkg_check_modules(XCBPROTO REQUIRED xcb-proto)
+
+# Store the location of the proto xml files inside XCBPROTO_XCBINCLUDEDIR
+pkg_get_variable(XCBPROTO_XCBINCLUDEDIR xcb-proto xcbincludedir)
+
+# Search for a python interpreter, if the user didn't specify any
+find_package(Python3 REQUIRED COMPONENTS Interpreter)
+
 #
 # Loop through a hardcoded list of python executables to locate the python module "xcbgen"
 #
-# TODO drop python2 once ubuntu and debian ship python3-xcbgen in their
-# maintained distros
-foreach(CURRENT_EXECUTABLE ${PYTHON_EXECUTABLE} python3 python python2 python2.7)
-  message(STATUS "Searching for xcbgen with " ${CURRENT_EXECUTABLE})
+message(STATUS "Searching for xcbgen with " ${Python3_EXECUTABLE})
 
-  execute_process(COMMAND "${CURRENT_EXECUTABLE}" "-c"
-    "import re,xcbgen;print(re.compile('/xcbgen/__init__.py.*').sub('',xcbgen.__file__))"
-    RESULT_VARIABLE _xcbgen_status
-    OUTPUT_VARIABLE _xcbgen_location
-    ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
+execute_process(COMMAND "${Python3_EXECUTABLE}" "-c"
+  "import re,xcbgen;print(re.compile('/xcbgen/__init__.py.*').sub('',xcbgen.__file__))"
+  RESULT_VARIABLE _xcbgen_status
+  OUTPUT_VARIABLE _xcbgen_location
+  ERROR_QUIET OUTPUT_STRIP_TRAILING_WHITESPACE)
 
-  # When a shell script returns successfully its return code is 0
-  if(_xcbgen_status EQUAL 0)
-    set(PYTHON_XCBGEN "${_xcbgen_location}" CACHE STRING "Location of python module: xcbgen ")
-    message(STATUS "Found xcbgen in " ${PYTHON_XCBGEN})
-    break()
-  endif()
-
-endforeach(CURRENT_EXECUTABLE)
-
-if(NOT PYTHON_XCBGEN)
+# When a shell script returns successfully its return code is 0
+if(_xcbgen_status EQUAL 0)
+  set(PYTHON_XCBGEN "${_xcbgen_location}" CACHE STRING "Location of python module: xcbgen ")
+  message(STATUS "Found xcbgen in " ${PYTHON_XCBGEN})
+else()
   message(FATAL_ERROR "Missing required python module: xcbgen")
 endif()
 
@@ -181,17 +164,17 @@ foreach(PROTO ${PROTO_LIST})
     string(REGEX REPLACE "proto\$" "" PROTO_OUTPUT ${PROTO})
     set(OUTPUT_FILE ${PROTO_GEN_DIR}/${PROTO_OUTPUT}.cppm)
     execute_process(
-            OUTPUT_FILE ${OUTPUT_FILE}
-            COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/generators/cpp_client.py -p "${PYTHON_XCBGEN}"
+            OUTPUT_FILE ${OUTPUT_FILE} 
+            COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/generators/cpp_client.py -p "${PYTHON_XCBGEN}"
             ${XCBPROTO_XCBINCLUDEDIR}/${PROTO}.xml > ${OUTPUT_FILE}
             RESULT_VARIABLE result)
     if(NOT result EQUAL 0)
-        message(FATAL_ERROR "xcb-gen failed")
+        message(FATAL_ERROR "xcb-gen failed for ${PROTO}")
     endif()
     add_custom_command(
             OUTPUT ${OUTPUT_FILE}
             CODEGEN
-            COMMAND ${PYTHON_EXECUTABLE} ${PROJECT_SOURCE_DIR}/generators/cpp_client.py -p "${PYTHON_XCBGEN}"
+            COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/generators/cpp_client.py -p "${PYTHON_XCBGEN}"
             ${XCBPROTO_XCBINCLUDEDIR}/${PROTO}.xml > ${OUTPUT_FILE})
     set_source_files_properties(${OUTPUT_FILE} PROPERTIES GENERATED TRUE)
     list(APPEND PROTO_GEN_FILES ${OUTPUT_FILE})
