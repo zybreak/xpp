@@ -8,34 +8,34 @@ import xpp.generic.signature;
 import xpp.generic.iterator_traits;
 
 namespace xpp::generic::detail {
-    
-    template <typename F>
+
+    template<typename F>
     struct function_traits;
 
-    template <typename Signature, Signature& S>
+    template<typename Signature, Signature& S>
     struct function_traits<signature<Signature, S>> : function_traits<Signature> {};
 
-    template <typename R, typename... Args>
+    template<typename R, typename... Args>
     struct function_traits<R (*)(Args...)> : function_traits<R(Args...)> {};
 
-    template <typename R, typename... Args>
+    template<typename R, typename... Args>
     struct function_traits<R(Args...)> {
         using result_type = R;
         static std::size_t const arity = sizeof...(Args);
 
-        template <std::size_t I>
+        template<std::size_t I>
         struct argument {
             static_assert(I < arity, "invalid argument index");
             using type = typename std::tuple_element<I, std::tuple<Args...>>::type;
         };
     };
-}  // namespace detail
+}  // namespace xpp::generic::detail
 
 export namespace xpp {
 
     namespace generic {
 
-        template <typename Data>
+        template<typename Data>
         class get {
           public:
             Data
@@ -44,7 +44,7 @@ export namespace xpp {
             }
         };
 
-        template <>
+        template<>
         class get<xcb_str_t> {
           public:
             std::string
@@ -56,17 +56,17 @@ export namespace xpp {
 
         // iterator for variable size data fields
 
-        template <typename... Types>
+        template<typename... Types>
         class iterator;
 
-        template <typename Connection,
-                  typename Object,
-                  typename NextTemplate,
-                  NextTemplate& Next,
-                  typename SizeOfTemplate,
-                  SizeOfTemplate& SizeOf,
-                  typename GetIteratorTemplate,
-                  GetIteratorTemplate& GetIterator>
+        template<typename Connection,
+                 typename Object,
+                 typename NextTemplate,
+                 NextTemplate& Next,
+                 typename SizeOfTemplate,
+                 SizeOfTemplate& SizeOf,
+                 typename GetIteratorTemplate,
+                 GetIteratorTemplate& GetIterator>
         class iterator<Connection,
                        Object,
                        xpp::generic::signature<NextTemplate, Next>,
@@ -99,7 +99,7 @@ export namespace xpp {
             iterator(void) {
             }
 
-            template <typename C>
+            template<typename C>
             iterator(C&& c, std::shared_ptr<Reply> const& reply)
                 : m_c(std::forward<C>(c)), m_reply(reply), m_iterator(GetIterator(reply.get())) {
             }
@@ -158,13 +158,13 @@ export namespace xpp {
                 return copy;
             }
 
-            template <typename C>
+            template<typename C>
             static self
             begin(C&& c, std::shared_ptr<Reply> const& reply) {
                 return self{std::forward<C>(c), reply};
             }
 
-            template <typename C>
+            template<typename C>
             static self
             end(C&& c, std::shared_ptr<Reply> const& reply) {
                 auto it = self{std::forward<C>(c), reply};
@@ -175,12 +175,12 @@ export namespace xpp {
 
         // iterator for fixed size data fields
 
-        template <typename Connection,
-                  typename Object,
-                  typename AccessorTemplate,
-                  AccessorTemplate& Accessor,
-                  typename LengthTemplate,
-                  LengthTemplate& Length>
+        template<typename Connection,
+                 typename Object,
+                 typename AccessorTemplate,
+                 AccessorTemplate& Accessor,
+                 typename LengthTemplate,
+                 LengthTemplate& Length>
         class iterator<Connection,
                        Object,
                        signature<AccessorTemplate, Accessor>,
@@ -215,7 +215,7 @@ export namespace xpp {
             iterator(void) {
             }
 
-            template <typename C>
+            template<typename C>
             iterator(C&& c,
                      std::shared_ptr<Reply> const& reply,
                      std::size_t index)
@@ -263,13 +263,13 @@ export namespace xpp {
                 return copy;
             }
 
-            template <typename C>
+            template<typename C>
             static self
             begin(C&& c, std::shared_ptr<Reply> const& reply) {
                 return self{std::forward<C>(c), reply, 0};
             }
 
-            template <typename C>
+            template<typename C>
             static self
             end(C&& c, std::shared_ptr<Reply> const& reply) {
                 return self{std::forward<C>(c),
@@ -278,7 +278,7 @@ export namespace xpp {
             }
         };  // class iterator
 
-        template <typename Connection, typename Reply, typename Iterator>
+        template<typename Connection, typename Reply, typename Iterator>
         class list {
           private:
             // before public part, to make decltype in begin() & end() work!
@@ -286,7 +286,7 @@ export namespace xpp {
             std::shared_ptr<Reply> m_reply;
 
           public:
-            template <typename C>
+            template<typename C>
             list(C&& c, std::shared_ptr<Reply> const& reply)
                 : m_c(std::forward<C>(c)), m_reply(reply) {
             }

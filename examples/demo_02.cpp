@@ -73,7 +73,6 @@ int main(int, char **)
   }
   std::cerr << std::endl;
 
-#if 0
   // Creates an atom called "XPP_STRING_PROPERTY_DEMO" with a string property
   // "xpp is working" on the root window
   // check with `xprop -root XPP_STRING_PROPERTY_DEMO`
@@ -89,6 +88,7 @@ int main(int, char **)
     auto atom_name = connection.get_atom_name(my_string_atom.atom());
     std::cerr << "atom name: " << atom_name.name() << std::endl;;
 
+#if 0
     connection.change_property_checked(
         XCB_PROP_MODE_REPLACE, connection.root(),
         my_string_atom.atom(), XCB_ATOM_STRING, 8,
@@ -103,11 +103,11 @@ int main(int, char **)
         // using length() & c_str()
         my_string.length(), my_string.c_str());
 
+#endif
   } catch (const std::exception & e) {
     std::cerr << "change property failed: " << e.what() << std::endl;
   }
   std::cerr << std::endl;
-#endif
 
   // Get the _NET_CLIENT_LIST_STACKING property
   // If an error occurs, it will be thrown only when trying to access the reply

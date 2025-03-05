@@ -19,6 +19,7 @@ InsertBraces: true
 InsertNewlineAtEOF: true
 ColumnLimit: 0
 SpaceBeforeParens: ControlStatements
+SpaceAfterTemplateKeyword: false
 SortIncludes: Never
 AlignAfterOpenBracket: Align
 BreakBeforeConceptDeclarations: Always

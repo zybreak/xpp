@@ -3,7 +3,7 @@ module;
 
 #define GENERATE_HAS_MEMBER(member)                                                   \
                                                                                       \
-    template <typename T, bool B>                                                     \
+    template<typename T, bool B>                                                      \
     class HasMember_##member {                                                        \
       private:                                                                        \
         using Yes = char[2];                                                          \
@@ -15,22 +15,22 @@ module;
         struct Derived : T,                                                           \
                          Fallback {};                                                 \
                                                                                       \
-        template <typename U>                                                         \
+        template<typename U>                                                          \
         static No& test(decltype(U::member)*);                                        \
-        template <typename U>                                                         \
+        template<typename U>                                                          \
         static Yes& test(U*);                                                         \
                                                                                       \
       public:                                                                         \
         static constexpr bool RESULT = sizeof(test<Derived>(nullptr)) == sizeof(Yes); \
     };                                                                                \
                                                                                       \
-    template <typename T>                                                             \
+    template<typename T>                                                              \
     class HasMember_##member<T, false> {                                              \
       public:                                                                         \
         static constexpr bool RESULT = false;                                         \
     };                                                                                \
                                                                                       \
-    template <typename T>                                                             \
+    template<typename T>                                                              \
     struct has_member_##member                                                        \
         : public std::integral_constant<                                              \
               bool,                                                                   \
@@ -46,80 +46,72 @@ export {
 
     // namespace iterator {
 
-    template <typename Iterator>
+    template<typename Iterator>
     struct value_iterator_base {
-        value_iterator_base(Iterator& iterator)
+        value_iterator_base(Iterator const& iterator)
             : m_iterator(iterator) {
         }
 
-        bool
-        operator==(value_iterator_base& other) {
+        bool operator==(value_iterator_base const& other) {
             return m_iterator == other.m_iterator;
         }
 
-        bool
-        operator!=(value_iterator_base& other) {
+        bool operator!=(value_iterator_base const& other) {
             return m_iterator != other.m_iterator;
         }
 
-        void
-        operator++(void) {
+        void operator++(void) {
             ++m_iterator;
         }
 
-        template <typename Key, typename Value>
-        Value const&
-        get_value(std::pair<Key, Value>& pair) {
+        template<typename Key, typename Value>
+        Value const& get_value(std::pair<Key, Value> const& pair) {
             return pair.second;
         }
 
-        template <typename Value>
-        Value const&
-        get_value(Value& v) {
+        template<typename Value>
+        Value const& get_value(Value const& v) {
             return v;
         }
 
         Iterator m_iterator;
     };
 
-    template <typename Iterator>
-    struct value_iterator_pair
-        : public value_iterator_base<Iterator>,
-          public std::iterator<typename std::input_iterator_tag,
-                               // value_type
-                               typename Iterator::value_type::second_type,
-                               typename std::iterator_traits<Iterator>::difference_type,
-                               // pointer
-                               typename Iterator::value_type::second_type*,
-                               // reference
-                               typename Iterator::value_type::second_type&> {
+    template<typename Iterator>
+    struct value_iterator_pair : public value_iterator_base<Iterator> {
         typedef value_iterator_base<Iterator> base;
         using base::base;
 
-        typename Iterator::value_type::second_type&
+        typedef typename Iterator::value_type::second_type value_type;
+        typedef typename std::iterator_traits<Iterator>::difference_type difference_type;
+        typedef typename Iterator::value_type::second_type* pointer;
+        typedef typename Iterator::value_type::second_type const& reference;
+        typedef typename std::input_iterator_tag iterator_category;
+
+        typename Iterator::value_type::second_type const&
         operator*(void) {
             return base::get_value(*base::m_iterator);
         }
     };
 
-    template <typename Iterator>
-    struct value_iterator_integral
-        : public value_iterator_base<Iterator>,
-          public std::iterator<typename std::input_iterator_tag,
-                               typename std::iterator_traits<Iterator>::value_type,
-                               typename std::iterator_traits<Iterator>::difference_type,
-                               typename std::iterator_traits<Iterator>::pointer,
-                               typename std::iterator_traits<Iterator>::reference> {
+    template<typename Iterator>
+    struct value_iterator_integral : public value_iterator_base<Iterator> {
         typedef value_iterator_base<Iterator> base;
         using base::base;
 
-        typename Iterator::value_type&
+        typedef typename std::iterator_traits<Iterator>::value_type value_type;
+        typedef typename std::iterator_traits<Iterator>::difference_type difference_type;
+        typedef typename std::iterator_traits<Iterator>::pointer pointer;
+        typedef typename std::iterator_traits<Iterator>::reference reference;
+        typedef typename std::input_iterator_tag iterator_category;
+
+        typename Iterator::value_type const&
         operator*(void) {
             return base::get_value(*base::m_iterator);
         }
     };
 
-    template <typename Iterator>
+    template<typename Iterator>
     struct value_iterator
         : public std::conditional<
               has_member_first<typename Iterator::value_type>::value && has_member_second<typename Iterator::value_type>::value,
@@ -132,7 +124,7 @@ export {
         using base::base;
     };
 
-    template <typename T, bool B = true>
+    template<typename T, bool B = true>
     struct value_type {
         typedef typename std::conditional<
             has_member_second<typename T::value_type>::value,
@@ -141,7 +133,7 @@ export {
             type;
     };
 
-    template <typename T>
+    template<typename T>
     struct value_type<T, false> {
         typedef typename std::remove_const<
             typename std::remove_pointer<T>::type>::type type;
