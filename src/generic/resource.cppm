@@ -6,11 +6,11 @@ import std;
 
 namespace xpp::generic::detail {
 
-    template <typename Connection, typename Resource, typename ResourceId,
-        template <typename, typename> class... Interfaces>
+    template<typename Connection, typename Resource, typename ResourceId,
+             template<typename, typename> class... Interfaces>
     class interfaces
         : public Interfaces<interfaces<Connection, Resource, ResourceId, Interfaces...>,
-            Connection>... {
+                            Connection>... {
       public:
         ResourceId const &
         resource(void) const {
@@ -23,14 +23,14 @@ namespace xpp::generic::detail {
         }
     };  // class interfaces
 
-};
+};  // namespace xpp::generic::detail
 
 export namespace xpp {
 
     namespace generic {
 
-        template <typename Connection, typename ResourceId,
-                  template <typename, typename> class... Interfaces>
+        template<typename Connection, typename ResourceId,
+                 template<typename, typename> class... Interfaces>
         class resource
             : public detail::interfaces<Connection,
                                         resource<Connection, ResourceId, Interfaces...>,
@@ -46,7 +46,7 @@ export namespace xpp {
                 : m_c(c) {
             }
 
-            template <typename C, typename Create, typename Destroy>
+            template<typename C, typename Create, typename Destroy>
             static self
             make(C &&c, Create create, Destroy destroy) {
                 self resource(std::forward<C>(c));
@@ -70,7 +70,7 @@ export namespace xpp {
             }
 
           public:
-            template <typename C>
+            template<typename C>
             resource(C &&c, ResourceId const &resource_id)
                 : m_c(std::forward<C>(c)), m_resource(std::make_shared<ResourceId>(resource_id)) {
             }
@@ -106,8 +106,8 @@ export namespace xpp {
             }
         };  // class resource
 
-        template <typename Connection, typename ResourceId,
-                  template <typename, typename> class... Interfaces>
+        template<typename Connection, typename ResourceId,
+                 template<typename, typename> class... Interfaces>
         std::ostream &
         operator<<(std::ostream &os,
                    resource<Connection, ResourceId, Interfaces...> const &resource) {

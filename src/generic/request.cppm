@@ -28,7 +28,7 @@ import xpp.generic.signature;
 export namespace xpp {
     namespace generic {
 
-        template <typename Connection, typename Dispatcher>
+        template<typename Connection, typename Dispatcher>
         void
         check(Connection &&c, xcb_void_cookie_t const &cookie) {
             xcb_generic_error_t *error =
@@ -42,21 +42,21 @@ export namespace xpp {
         struct checked_tag {};
         struct unchecked_tag {};
 
-        template <typename... Types>
+        template<typename... Types>
         class reply;
 
-        template <typename Derived,
-                  typename Connection,
-                  typename Check,
-                  REPLY_TEMPLATE,
-                  REPLY_COOKIE_TEMPLATE>
+        template<typename Derived,
+                 typename Connection,
+                 typename Check,
+                 REPLY_TEMPLATE,
+                 REPLY_COOKIE_TEMPLATE>
         class reply<Derived,
                     Connection,
                     Check,
                     REPLY_SIGNATURE,
                     REPLY_COOKIE_SIGNATURE> {
           public:
-            template <typename C, typename... Parameter>
+            template<typename C, typename... Parameter>
             reply(C &&c, Parameter &&...parameter)
                 : m_c(std::forward<C>(c)), m_cookie(Derived::cookie(std::forward<C>(c), std::forward<Parameter>(parameter)...)) {
             }
@@ -83,7 +83,7 @@ export namespace xpp {
                 return m_reply;
             }
 
-            template <typename... Parameter>
+            template<typename... Parameter>
             static Cookie
             cookie(Parameter &&...parameter) {
                 return CookieFunction(std::forward<Parameter>(parameter)...);

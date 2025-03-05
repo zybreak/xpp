@@ -10,8 +10,8 @@ import xpp.generic.factory;
 import xpp.proto.x;
 
 namespace xpp::detail {
-    
-    template <typename Connection, typename... Extensions>
+
+    template<typename Connection, typename... Extensions>
     class interfaces
         : public xpp::x::extension::interface<interfaces<Connection, Extensions...>, Connection>,
           public Extensions::template interface<interfaces<Connection, Extensions...>, Connection>... {
@@ -22,11 +22,11 @@ namespace xpp::detail {
         }
     };  // class interfaces
 
-};  // namespace detail
+};  // namespace xpp::detail
 
 export namespace xpp {
 
-    template <typename... Extensions>
+    template<typename... Extensions>
     class connection
         : public xpp::core,
           public xpp::generic::error_dispatcher,
@@ -41,7 +41,7 @@ export namespace xpp {
         typedef connection<Extensions...> self;
 
       public:
-        template <typename... Parameters>
+        template<typename... Parameters>
         explicit connection(Parameters &&...parameters)
             : xpp::core::core(std::forward<Parameters>(parameters)...), detail::interfaces<connection<Extensions...>, Extensions...>(*this), Extensions(static_cast<xcb_connection_t *>(*this))..., Extensions::error_dispatcher(static_cast<Extensions &>(*this).get())... {
             m_root_window = screen_of_display(default_screen())->root;
@@ -60,7 +60,7 @@ export namespace xpp {
             check<xpp::x::extension, Extensions...>(error);
         }
 
-        template <typename Extension>
+        template<typename Extension>
         Extension const &
         extension(void) const {
             return static_cast<Extension const &>(*this);
@@ -71,14 +71,14 @@ export namespace xpp {
         // {
         // }
 
-        template <typename Window = xcb_window_t>
+        template<typename Window = xcb_window_t>
         Window
         root(void) {
             using make = xpp::generic::factory::make<self, xcb_window_t, Window>;
             return make()(*this, m_root_window);
         }
 
-        template <typename Window = xcb_window_t>
+        template<typename Window = xcb_window_t>
         Window
         root(void) const {
             using make = xpp::generic::factory::make<self, xcb_window_t, Window>;
@@ -110,14 +110,14 @@ export namespace xpp {
       private:
         xcb_window_t m_root_window;
 
-        template <typename Extension, typename Next, typename... Rest>
+        template<typename Extension, typename Next, typename... Rest>
         void
         check(std::shared_ptr<xcb_generic_error_t> const &error) const {
             check<Extension>(error);
             check<Next, Rest...>(error);
         }
 
-        template <typename Extension>
+        template<typename Extension>
         void
         check(std::shared_ptr<xcb_generic_error_t> const &error) const {
             using error_dispatcher = typename Extension::error_dispatcher;
@@ -126,8 +126,8 @@ export namespace xpp {
         }
     };  // class connection
 
-    template <>
-    template <typename... Parameters>
+    template<>
+    template<typename... Parameters>
     connection<>::connection(Parameters &&...parameters)
         : xpp::core::core(std::forward<Parameters>(parameters)...), detail::interfaces<connection<>>(*this) {
         m_root_window = screen_of_display(static_cast<core &>(*this).default_screen())->root;

@@ -9,7 +9,7 @@ import xpp.proto.x;
 
 export namespace xpp {
 
-    template <typename Connection, template <typename, typename> class... Interfaces>
+    template<typename Connection, template<typename, typename> class... Interfaces>
     class fontable
         : public xpp::generic::resource<Connection, xcb_fontable_t,
                                         xpp::x::fontable, Interfaces...> {
@@ -24,7 +24,7 @@ export namespace xpp {
 
     namespace generic {
 
-        template <typename Connection, template <typename, typename> class... Interfaces>
+        template<typename Connection, template<typename, typename> class... Interfaces>
         struct traits<xpp::fontable<Connection, Interfaces...>> {
             typedef xcb_fontable_t type;
         };

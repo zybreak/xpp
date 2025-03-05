@@ -9,7 +9,7 @@ import xpp.proto.x;
 
 export namespace xpp {
 
-    template <typename Connection, template <typename, typename> class... Interfaces>
+    template<typename Connection, template<typename, typename> class... Interfaces>
     class colormap
         : public xpp::generic::resource<Connection, xcb_colormap_t,
                                         xpp::x::colormap, Interfaces...> {
@@ -17,7 +17,7 @@ export namespace xpp {
         using base = xpp::generic::resource<Connection, xcb_colormap_t,
                                             xpp::x::colormap, Interfaces...>;
 
-        template <typename C, typename Create, typename Destroy>
+        template<typename C, typename Create, typename Destroy>
         colormap(C&& c, Create&& create, Destroy&& destroy)
             : base(base::make(std::forward<C>(c),
                               std::forward<Create>(create),
@@ -28,7 +28,7 @@ export namespace xpp {
         using base::base;
         using base::operator=;
 
-        template <typename C>
+        template<typename C>
         static colormap<Connection, Interfaces...>
         create(C&& c, uint8_t alloc, xcb_window_t window, xcb_visualid_t visual) {
             return colormap(
@@ -41,7 +41,7 @@ export namespace xpp {
             });
         }
 
-        template <typename C>
+        template<typename C>
         static colormap<Connection, Interfaces...>
         create_checked(C&& c, uint8_t alloc,
                        xcb_window_t window, xcb_visualid_t visual) {
@@ -58,7 +58,7 @@ export namespace xpp {
 
     namespace generic {
 
-        template <typename Connection, template <typename, typename> class... Interfaces>
+        template<typename Connection, template<typename, typename> class... Interfaces>
         struct traits<xpp::colormap<Connection, Interfaces...>> {
             typedef xcb_colormap_t type;
         };

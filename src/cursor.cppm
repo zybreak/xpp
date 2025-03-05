@@ -9,7 +9,7 @@ import xpp.proto.x;
 
 export namespace xpp {
 
-    template <typename Connection, template <typename, typename> class... Interfaces>
+    template<typename Connection, template<typename, typename> class... Interfaces>
     class cursor
         : public xpp::generic::resource<Connection, xcb_cursor_t,
                                         xpp::x::cursor, Interfaces...> {
@@ -17,7 +17,7 @@ export namespace xpp {
         using base = xpp::generic::resource<Connection, xcb_cursor_t,
                                             xpp::x::cursor, Interfaces...>;
 
-        template <typename C, typename Create, typename Destroy>
+        template<typename C, typename Create, typename Destroy>
         cursor(C&& c, Create&& create, Destroy&& destroy)
             : base(base::make(std::forward<C>(c),
                               std::forward<Create>(create),
@@ -28,7 +28,7 @@ export namespace xpp {
         using base::base;
         using base::operator=;
 
-        template <typename C>
+        template<typename C>
         static cursor<Connection, Interfaces...>
         create(C&& c,
                xcb_pixmap_t source, xcb_pixmap_t mask,
@@ -49,7 +49,7 @@ export namespace xpp {
             });
         }
 
-        template <typename C>
+        template<typename C>
         static cursor<Connection, Interfaces...>
         create_checked(C&& c,
                        xcb_pixmap_t source, xcb_pixmap_t mask,
@@ -70,7 +70,7 @@ export namespace xpp {
             });
         }
 
-        template <typename C>
+        template<typename C>
         static cursor<Connection, Interfaces...>
         create_glyph(C&& c,
                      xcb_font_t source_font, xcb_font_t mask_font,
@@ -91,7 +91,7 @@ export namespace xpp {
             });
         }
 
-        template <typename C>
+        template<typename C>
         static cursor<Connection, Interfaces...>
         create_glyph_checked(C&& c,
                              xcb_font_t source_font, xcb_font_t mask_font,
@@ -115,7 +115,7 @@ export namespace xpp {
 
     namespace generic {
 
-        template <typename Connection, template <typename, typename> class... Interfaces>
+        template<typename Connection, template<typename, typename> class... Interfaces>
         struct traits<xpp::cursor<Connection, Interfaces...>> {
             typedef xcb_cursor_t type;
         };

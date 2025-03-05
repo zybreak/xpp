@@ -43,7 +43,7 @@ export namespace xpp {
             : m_c(std::shared_ptr<xcb_connection_t>(c, [](...) {})) {
         }
 
-        template <typename... ConnectionParameter>
+        template<typename... ConnectionParameter>
         explicit core(xcb_connection_t *(*Connect)(ConnectionParameter...),
                       ConnectionParameter... connection_parameter)
             : m_c(std::shared_ptr<xcb_connection_t>(
@@ -71,7 +71,7 @@ export namespace xpp {
         virtual ~core() {
         }
 
-        virtual xcb_connection_t * operator*() const;
+        virtual xcb_connection_t *operator*() const;
         virtual operator xcb_connection_t *() const;
         virtual int default_screen() const;
         virtual int flush() const;
@@ -82,22 +82,22 @@ export namespace xpp {
         virtual shared_generic_event_ptr poll_for_queued_event() const;
         virtual shared_generic_event_ptr poll_for_special_event(xcb_special_event_t *se) const;
         virtual shared_generic_event_ptr wait_for_special_event(xcb_special_event_t *se) const;
-        virtual xcb_special_event_t * register_for_special_xge(xcb_extension_t *ext, uint32_t eid, uint32_t *stamp) const;
+        virtual xcb_special_event_t *register_for_special_xge(xcb_extension_t *ext, uint32_t eid, uint32_t *stamp) const;
         virtual void unregister_for_special_event(xcb_special_event_t *se) const;
         virtual std::shared_ptr<xcb_generic_error_t> request_check(xcb_void_cookie_t cookie) const;
         virtual void discard_reply(unsigned int sequence) const;
         // The result must not be freed.
         // This storage is managed by the cache itself.
-        virtual xcb_query_extension_reply_t const * get_extension_data(xcb_extension_t *ext) const;
+        virtual xcb_query_extension_reply_t const *get_extension_data(xcb_extension_t *ext) const;
         virtual void prefetch_extension_data(xcb_extension_t *ext) const;
-        virtual xcb_setup_t const * get_setup() const;
+        virtual xcb_setup_t const *get_setup() const;
         virtual int get_file_descriptor() const;
         virtual int connection_has_error() const;
         virtual void disconnect() const;
         // hostname, display, screen
         virtual std::tuple<std::string, int, int> parse_display(std::string const &name) const;
         virtual uint32_t generate_id() const;
-        xcb_screen_t * screen_of_display(int screen);
+        xcb_screen_t *screen_of_display(int screen);
         void check_connection() const;
     };  // class core
 

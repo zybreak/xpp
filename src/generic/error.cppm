@@ -4,16 +4,16 @@ export module xpp.generic.error;
 
 import std;
 export namespace xpp::generic {
-    
+
     class error_dispatcher {
       public:
         virtual void operator()(std::shared_ptr<xcb_generic_error_t> const &) const = 0;
     };
-};
+};  // namespace xpp::generic
 
 namespace xpp::generic::detail {
 
-    template <typename Object>
+    template<typename Object>
     void
     dispatch(Object const &object,
              std::shared_ptr<xcb_generic_error_t> const &error,
@@ -21,7 +21,7 @@ namespace xpp::generic::detail {
         static_cast<xpp::generic::error_dispatcher const &>(object)(error);
     }
 
-    template <typename Object>
+    template<typename Object>
     void
     dispatch(Object const &,
              std::shared_ptr<xcb_generic_error_t> const &error,
@@ -29,12 +29,12 @@ namespace xpp::generic::detail {
         throw error;
     }
 
-};  // namespace detail
+};  // namespace xpp::generic::detail
 
 export namespace xpp {
     namespace generic {
 
-        template <typename Object>
+        template<typename Object>
         void
         dispatch(Object const &object,
                  std::shared_ptr<xcb_generic_error_t> const &error) {
@@ -43,18 +43,19 @@ export namespace xpp {
                              std::is_base_of<xpp::generic::error_dispatcher, Object>());
         }
 
-        template <typename Error>
+        template<typename Error>
         class error : public std::exception {
           public:
-            error(std::shared_ptr<xcb_generic_error_t> const &error) : m_error(error) {
+            error(std::shared_ptr<xcb_generic_error_t> const &error)
+                : m_error(error) {
             }
 
             virtual ~error(void) {
             }
-            
+
             virtual std::string_view description() const noexcept = 0;
-            
-            virtual char const * what() const noexcept {
+
+            virtual char const *what() const noexcept {
                 static std::string desc = std::string(description()) + " (" + std::to_string(m_error.get()->error_code) + ")";
                 return desc.c_str();
             }

@@ -6,16 +6,16 @@ import std;
 import xpp.proto.x;
 
 namespace xpp::event::detail {
-    
+
     class dispatcher {
       public:
         virtual ~dispatcher(void) {
         }
-        template <typename Event>
+        template<typename Event>
         void dispatch(Event const &e);
     };  // class dispatcher
 
-    template <typename Event>
+    template<typename Event>
     class sink : virtual public dispatcher {
       public:
         virtual ~sink(void) {
@@ -23,26 +23,26 @@ namespace xpp::event::detail {
         virtual void handle(Event const &) = 0;
     };
 
-};  // namespace detail
+};  // namespace xpp::event::detail
 
 export {
     namespace xpp {
 
         namespace event {
 
-            template <typename Event, typename... Events>
+            template<typename Event, typename... Events>
             class sink
                 : public detail::sink<Event>,
                   public detail::sink<Events>... {};
 
-            template <typename Connection, typename... Extensions>
+            template<typename Connection, typename... Extensions>
             class registry
                 : public xpp::x::event::dispatcher<Connection>,
                   public Extensions::template event_dispatcher<Connection>... {
               public:
                 typedef unsigned int priority;
 
-                template <typename C>
+                template<typename C>
                 explicit registry(C &&c)
                     : xpp::x::event::dispatcher<Connection>(std::forward<C>(c)), Extensions::template event_dispatcher<Connection>(std::forward<C>(c), c.template extension<Extensions>())..., m_c(std::forward<C>(c)) {
                 }
@@ -52,13 +52,13 @@ export {
                     return dispatch<xpp::x::extension, Extensions...>(event);
                 }
 
-                template <typename Event, typename... Rest>
+                template<typename Event, typename... Rest>
                 void
                 attach(priority p, sink<Event, Rest...> *s) {
                     attach<sink<Event, Rest...>, Event, Rest...>(p, s);
                 }
 
-                template <typename Event, typename... Rest>
+                template<typename Event, typename... Rest>
                 void
                 detach(priority p, sink<Event, Rest...> *s) {
                     detach<sink<Event, Rest...>, Event, Rest...>(p, s);
@@ -70,22 +70,22 @@ export {
                 Connection m_c;
                 std::unordered_map<uint8_t, priority_map> m_dispatchers;
 
-                template <typename Event>
+                template<typename Event>
                 uint8_t opcode(xpp::x::extension const &) const {
                     return Event::opcode();
                 }
 
-                template <typename Event, typename Extension>
+                template<typename Event, typename Extension>
                 uint8_t opcode(Extension const &extension) const {
                     return Event::opcode(extension);
                 }
 
-                template <typename Event>
+                template<typename Event>
                 uint8_t opcode(void) const {
                     return opcode<Event>(m_c.template extension<typename Event::extension>());
                 }
 
-                template <typename Event>
+                template<typename Event>
                 void
                 handle(Event const &event) const {
                     auto it = m_dispatchers.find(opcode<Event>());
@@ -103,34 +103,34 @@ export {
 
                     registry<Connection, Extensions...> const &m_registry;
 
-                    template <typename Event>
+                    template<typename Event>
                     void
                     operator()(Event const &event) const {
                         m_registry.handle(event);
                     }
                 };
 
-                template <typename Extension>
+                template<typename Extension>
                 bool
                 dispatch(std::shared_ptr<xcb_generic_event_t> const &event) const {
                     typedef typename Extension::template event_dispatcher<Connection> const &dispatcher;
                     return static_cast<dispatcher>(*this)(handler(*this), event);
                 }
 
-                template <typename Extension, typename Next, typename... Rest>
+                template<typename Extension, typename Next, typename... Rest>
                 bool
                 dispatch(std::shared_ptr<xcb_generic_event_t> const &event) const {
                     dispatch<Extension>(event);
                     return dispatch<Next, Rest...>(event);
                 }
 
-                template <typename Sink, typename Event>
+                template<typename Sink, typename Event>
                 void
                 attach(priority p, Sink *s) {
                     attach(p, s, opcode<Event>());
                 }
 
-                template <typename Sink, typename Event, typename Next, typename... Rest>
+                template<typename Sink, typename Event, typename Next, typename... Rest>
                 void
                 attach(priority p, Sink *s) {
                     attach(p, s, opcode<Event>());
@@ -141,13 +141,13 @@ export {
                     m_dispatchers[opcode].emplace(p, d);
                 }
 
-                template <typename Sink, typename Event>
+                template<typename Sink, typename Event>
                 void
                 detach(priority p, Sink *s) {
                     detach(p, s, opcode<Event>());
                 }
 
-                template <typename Sink, typename Event, typename Next, typename... Rest>
+                template<typename Sink, typename Event, typename Next, typename... Rest>
                 void
                 detach(priority p, Sink *s) {
                     detach(p, s, opcode<Event>());
@@ -180,7 +180,7 @@ export {
     }  // namespace xpp
 }
 
-template <typename Event>
+template<typename Event>
 void xpp::event::detail::dispatcher::dispatch(Event const &e) {
     auto event_sink = dynamic_cast<xpp::event::detail::sink<Event> *>(this);
     if (event_sink != nullptr) {

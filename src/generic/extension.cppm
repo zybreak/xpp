@@ -7,7 +7,7 @@ import std;
 export namespace xpp {
     namespace generic {
 
-        template <typename Derived, xcb_extension_t *Id>
+        template<typename Derived, xcb_extension_t *Id>
         class extension {
           public:
             extension(xcb_connection_t *const c)

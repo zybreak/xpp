@@ -7,7 +7,7 @@ import std;
 export namespace xpp {
     namespace generic {
 
-        template <typename Event>
+        template<typename Event>
         class event {
           public:
             event(std::shared_ptr<xcb_generic_event_t> const &event)

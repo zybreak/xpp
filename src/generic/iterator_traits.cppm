@@ -8,12 +8,12 @@ export namespace xpp {
 
     namespace generic {
 
-        template <typename T>
+        template<typename T>
         struct traits {
             typedef T type;
         };
 
-        template <typename Object>
+        template<typename Object>
         struct conversion_type {
             using type = typename traits<Object>::type;
         };

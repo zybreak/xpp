@@ -6,7 +6,7 @@ import std;
 
 export namespace xpp {
     namespace generic {
-        template <typename Signature, Signature& S>
+        template<typename Signature, Signature& S>
         class signature;
     }
 }  // namespace xpp
