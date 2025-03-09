@@ -1,8 +1,4 @@
-from utils import \
-        get_namespace, \
-        get_ext_name, \
-        _n_item, \
-        _ext
+from utils import get_namespace
 
 class ExtensionClass(object):
     def __init__(self, namespace):

@@ -1,12 +1,20 @@
-import re # compile
+import re  # compile
 
-_reserved_keywords = {'class' : '_class',
-                      'new'   : '_new',
+_reserved_keywords = {'class': '_class',
+                      'new': '_new',
                       'delete': '_delete',
-                      'default' : '_default',
-                      'private' : '_private',
+                      'default': '_default',
+                      'private': '_private',
                       'explicit': '_explicit',
                       'union': '_union'}
+
+_cplusplus_annoyances = {'class': '_class',
+                         'new': '_new',
+                         'delete': '_delete',
+                         'explicit': '_explicit'}
+
+_c_keywords = {'default': '_default'}
+
 
 def get_namespace(namespace):
     if namespace.is_ext:
@@ -14,18 +22,21 @@ def get_namespace(namespace):
     else:
         return "x"
 
+
 def get_ext_name(string):
     return _ext(string)
 
+
 _cname_re = re.compile('([A-Z0-9][a-z]+|[A-Z0-9]+(?![a-z])|[a-z]+)')
-_cname_special_cases = {'DECnet':'decnet'}
+_cname_special_cases = {'DECnet': 'decnet'}
+
 
 def _n_item(string, parts=False):
-    '''
+    """
     Does C-name conversion on a single string fragment.
     The resulting string is a valid C-name
     Uses a regexp with some hard-coded special cases.
-    '''
+    """
     if string in _cname_special_cases:
         return _cname_special_cases[string]
     else:
@@ -36,24 +47,27 @@ def _n_item(string, parts=False):
         else:
             return '_'.join(name_parts)
 
+
 _extension_special_cases = ['XPrint', 'XCMisc', 'BigRequests']
 
+
 def _ext(string):
-    '''
+    """
     Does C-name conversion on an extension name.
     Has some additional special cases on top of _n_item.
-    '''
+    """
     if string in _extension_special_cases:
         return _n_item(string).lower()
     else:
         return string.lower()
 
+
 def _n(list, namespace):
-    '''
+    """
     Does C-name conversion on a tuple of strings.
     Different behavior depending on length of tuple, extension/not extension, etc.
     Basically C-name converts the individual pieces, then joins with underscores.
-    '''
+    """
     if len(list) == 1:
         parts = list
     elif len(list) == 2:
@@ -63,3 +77,31 @@ def _n(list, namespace):
     else:
         parts = [list[0]] + [_n_item(i) for i in list[1:]]
     return '_'.join(parts).lower()
+
+
+def _t(list, namespace):
+    """
+    Does C-name conversion on a tuple of strings representing a type.
+    Same as _n but adds a "_t" on the end.
+    """
+    if len(list) == 1:
+        parts = list
+    elif len(list) == 2:
+        parts = [list[0], _n_item(list[1]), 't']
+    elif namespace.is_ext:
+        parts = [list[0], _ext(list[1])] + [_n_item(i) for i in list[2:]] + ['t']
+    else:
+        parts = [list[0]] + [_n_item(i) for i in list[1:]] + ['t']
+    return '_'.join(parts).lower()
+
+
+def _cpp(str):
+    """
+    Checks for certain C++ reserved words and fixes them.
+    """
+    if str in _cplusplus_annoyances:
+        return _cplusplus_annoyances[str]
+    elif str in _c_keywords:
+        return _c_keywords[str]
+    else:
+        return str

@@ -3,11 +3,7 @@
 import sys # stderr
 import copy # deepcopy
 
-from utils import \
-        get_namespace, \
-        get_ext_name, \
-        _n_item, \
-        _ext
+from utils import get_namespace
 
 class ObjectClass(object):
     def __init__(self, name):

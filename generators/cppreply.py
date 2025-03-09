@@ -1,4 +1,4 @@
-from utils import _n, _ext, _n_item, get_namespace
+from utils import _ext, _n_item, get_namespace
 from resource_classes import _resource_classes
 
 _templates = {}

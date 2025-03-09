@@ -1,10 +1,6 @@
-import sys # stderr
-
 from utils import \
         get_namespace, \
-        get_ext_name, \
         _n_item, \
-        _ext, \
         _reserved_keywords
 
 from resource_classes import _resource_classes
@@ -88,10 +84,6 @@ def event_dispatcher_class(namespace, cppevents):
 
     ctor_name = "dispatcher"
 
-    typedef = []
-    ctors = []
-    members = []
-
     opcode_switch = "event->response_type & ~0x80"
     typedef = [ "typedef xpp::%s::extension extension;\n" % ns ]
 
@@ -119,7 +111,7 @@ def event_dispatcher_class(namespace, cppevents):
 
         ctors = \
             [ "template<typename C>"
-            , "%s(C && c, uint8_t first_event)" % (ctor_name)
+            , "%s(C && c, uint8_t first_event)" % ctor_name
             , "  : m_c(std::forward<C>(c))"
             , "  , m_first_event(first_event)"
             , "{}"
@@ -128,7 +120,7 @@ def event_dispatcher_class(namespace, cppevents):
             , "%s(C && c, const xpp::%s::extension & extension)" % (ctor_name, ns)
             , "  : %s(std::forward<C>(c), extension->first_event)" % ctor_name
             , "{}"
-            ]
+              ]
 
     # >>> if end <<<
 
@@ -232,7 +224,6 @@ class CppEvent(object):
         member_accessors_special = []
         for field in self.fields:
             if field.field_type[-1] in _resource_classes:
-                template_name = field.field_name.capitalize()
                 c_type = field.c_field_type
                 method_name = field.field_name.lower()
                 if (method_name == self.get_name()
@@ -243,8 +234,6 @@ class CppEvent(object):
                 member_accessors.append(_field_accessor_template(c_type, method_name, member))
 
         ns = get_namespace(self.namespace)
-
-        extension = "xpp::%s::extension" % ns
 
         ctor = \
             [ "template<typename C>"

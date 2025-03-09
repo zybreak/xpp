@@ -49,7 +49,7 @@ def _string_accessor(member, c_name):
             (member, c_name, member, c_name, member)
 
 class Accessor(object):
-    def __init__(self, is_fixed=False, is_string=False, is_variable=False, \
+    def __init__(self, is_fixed=False, is_string=False, is_variable=False,
                  member="", c_type="", return_type="", iter_name="", c_name=""):
 
         self.is_fixed = is_fixed

@@ -1,10 +1,6 @@
 # vim: set ts=4 sws=4 sw=4:
 
-from utils import \
-        get_namespace, \
-        get_ext_name, \
-        _n_item, \
-        _ext
+from utils import get_namespace
 
 from cppevent import event_dispatcher_class
 from cpperror import error_dispatcher_class
@@ -79,8 +75,8 @@ class InterfaceClass(object):
             typedef = ""
 
 
-        return (_templates['interface_class'] \
-            % (typedef, ns, methods)) + \
+        return (_templates['interface_class']
+                % (typedef, ns, methods)) + \
               '\n' + event_dispatcher_class(self.namespace, self.events) + \
               '\n' + error_dispatcher_class(self.namespace, self.errors)
 

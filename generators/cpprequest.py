@@ -1,9 +1,8 @@
 # vim: set ts=4 sws=4 sw=4:
 
 # from utils import *
-from utils import _n, _ext, _n_item, get_namespace, _reserved_keywords
+from utils import _ext, _n_item, get_namespace, _reserved_keywords
 from parameter import *
-from resource_classes import _resource_classes
 from cppreply import CppReply
 from cppcookie import CppCookie
 

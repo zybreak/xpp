@@ -1,27 +1,29 @@
 # vim: set ts=4 sws=4 sw=4:
 
-import sys # stderr
+import sys  # stderr
 
 _templates = {}
 
 _templates['initializer'] = \
-'''\
-typedef typename value_type<%s, ! std::is_pointer<%s>::value>::type
-          vector_type;
-std::vector<vector_type> %s =
-  { value_iterator<%s>(%s), value_iterator<%s>(%s) };
-'''
+    '''\
+    typedef typename value_type<%s, ! std::is_pointer<%s>::value>::type
+              vector_type;
+    std::vector<vector_type> %s =
+      { value_iterator<%s>(%s), value_iterator<%s>(%s) };
+    '''
+
 
 def _initializer(iter_type, c_name, iter_begin, iter_end):
     return _templates['initializer'] % \
-            ( iter_type
-            , iter_type
-            , c_name
-            , iter_type
-            , iter_begin
-            , iter_type
-            , iter_end
-            )
+        (iter_type
+         , iter_type
+         , c_name
+         , iter_type
+         , iter_begin
+         , iter_type
+         , iter_end
+         )
+
 
 class ParameterList(object):
     def __init__(self):
@@ -89,7 +91,7 @@ class ParameterList(object):
                 if name in lenfields:
                     lenfields[name].append(param.c_name)
                 else:
-                    lenfields[name] = [ param.c_name ]
+                    lenfields[name] = [param.c_name]
 
                 # sys.stderr.write("list: %s %s\n\n"
                 #         % ( param.field.type.expr.lenfield_type
@@ -114,17 +116,16 @@ class ParameterList(object):
                 if param.c_type == 'char':
 
                     def append_proto_string(list):
-                        list.append(Parameter(None, \
-                            c_type='const std::string &',
-                            c_name=param.c_name))
+                        list.append(Parameter(None,
+                                              c_type='const std::string &',
+                                              c_name=param.c_name))
 
                     def append_call_string(list):
-                        list.append(Parameter(None, \
-                            c_name="static_cast<" + prev_type + ">(" \
-                            + param.c_name + '.length())'))
+                        list.append(Parameter(None,
+                                              c_name="static_cast<" + prev_type + ">(" + param.c_name + '.length())'))
 
-                        list.append(Parameter(None, \
-                            c_name=param.c_name + '.c_str()'))
+                        list.append(Parameter(None,
+                                              c_name=param.c_name + '.c_str()'))
 
                     append_proto_string(self.wrap_protos)
                     append_proto_string(self.iter_protos)
@@ -141,16 +142,16 @@ class ParameterList(object):
                     prev_type = self.parameter[prev].c_type
 
                     ### std::vector
-                    self.wrap_protos.append(Parameter(None, \
-                        c_type='const std::vector<' + param_type + '> &',
-                        c_name=param.c_name))
+                    self.wrap_protos.append(Parameter(None,
+                                                      c_type='const std::vector<' + param_type + '> &',
+                                                      c_name=param.c_name))
 
-                    self.wrap_calls.append(Parameter(None, \
-                      c_name="static_cast<" + prev_type + ">(" \
-                      + param.c_name + '.size())'))
+                    self.wrap_calls.append(Parameter(None,
+                                                     c_name="static_cast<" + prev_type + ">("
+                                                            + param.c_name + '.size())'))
 
-                    self.wrap_calls.append(Parameter(None, \
-                        c_name=param.c_name + '.data()'))
+                    self.wrap_calls.append(Parameter(None,
+                                                     c_name=param.c_name + '.data()'))
 
                     ### Iterator
                     iter_type = param.c_name.capitalize() + "_Iterator"
@@ -161,44 +162,28 @@ class ParameterList(object):
                         self.templates[-1] += " = typename " + iter_type + "::value_type"
                     self.iterator_templates.append(iter_type)
 
-                    self.iter_protos.append(Parameter(None, \
-                            c_type=iter_type,
-                            c_name=iter_begin))
+                    self.iter_protos.append(Parameter(None,
+                                                      c_type=iter_type,
+                                                      c_name=iter_begin))
 
-                    self.iter_protos.append(Parameter(None, \
-                            c_type=iter_type,
-                            c_name=iter_end))
+                    self.iter_protos.append(Parameter(None,
+                                                      c_type=iter_type,
+                                                      c_name=iter_end))
 
-                    self.iter_calls.append(Parameter(None, \
-                            c_name="static_cast<" + prev_type + ">(" \
-                            + param.c_name + '.size())'))
+                    self.iter_calls.append(Parameter(None,
+                                                     c_name="static_cast<" + prev_type + ">(" + param.c_name + '.size())'))
 
-                    self.iter_calls.append(Parameter(None, \
-                            c_name='const_cast<const vector_type *>(' \
-                            + param.c_name + '.data())'))
+                    self.iter_calls.append(Parameter(None,
+                                                     c_name='const_cast<const vector_type *>(' + param.c_name + '.data())'))
 
-                    self.iter_2nd_lvl_calls.append(Parameter(None, \
-                            c_name=iter_begin))
+                    self.iter_2nd_lvl_calls.append(Parameter(None,
+                                                             c_name=iter_begin))
 
-                    self.iter_2nd_lvl_calls.append(Parameter(None, \
-                            c_name=iter_end))
-
-#                     vector_type = \
-#                     '''\
-# typename value_type<%s,
-#                   ! std::is_pointer<%s>::value
-#                  >::type\
-#                     ''' % (iter_type, iter_type)
-
-                    # self.initializer.append( \
-                    #         "std::vector<%s> %s = { value_iterator<%s>(%s), \
-                    #         value_iterator<%s>(%s) };" \
-                    #         % (vector_type, param.c_name,
-                    #             iter_type, iter_begin,
-                    #             iter_type, iter_end))
+                    self.iter_2nd_lvl_calls.append(Parameter(None,
+                                                             c_name=iter_end))
 
                     self.initializer.append(
-                            _initializer(iter_type, param.c_name, iter_begin, iter_end))
+                        _initializer(iter_type, param.c_name, iter_begin, iter_end))
 
             else:
                 self.wrap_calls.append(param)
@@ -212,7 +197,6 @@ class ParameterList(object):
         for k, v in list(lenfields.items()):
             if len(v) > 1:
                 sys.stderr.write("list: %s, %s\n" % (k, v))
-
 
     def wrapped_calls(self, sort):
         return self.calls(sort, params=self.wrap_calls)
@@ -230,9 +214,9 @@ class ParameterList(object):
         return self.protos(sort, defaults, params=self.iter_protos)
 
 
-
 _default_parameter_values = \
-    { "xcb_timestamp_t" : "XCB_TIME_CURRENT_TIME" }
+    {"xcb_timestamp_t": "XCB_TIME_CURRENT_TIME"}
+
 
 class Parameter(object):
     def __init__(self, field, c_type="", c_name="", verbose=False):
@@ -247,7 +231,7 @@ class Parameter(object):
             self.with_default = True
             if verbose:
                 sys.stderr.write("c_type: %s; c_name: %s; default: %s\n" \
-                      % (self.c_type, self.c_name, self.default))
+                                 % (self.c_type, self.c_name, self.default))
 
         else:
             self.c_type = c_type
@@ -263,7 +247,7 @@ class Parameter(object):
 
     def proto(self, with_default):
         c_type = ("const " if self.is_const else "") \
-             + self.c_type \
-             + (" *" if self.is_pointer else "")
+                 + self.c_type \
+                 + (" *" if self.is_pointer else "")
         param = " = " + self.default if with_default and self.default != None else ""
         return c_type + " " + self.c_name + param

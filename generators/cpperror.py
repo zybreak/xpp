@@ -1,8 +1,6 @@
 from utils import \
         get_namespace, \
-        get_ext_name, \
         _n_item, \
-        _ext, \
         _reserved_keywords
 
 _templates = {}
@@ -44,7 +42,6 @@ def error_dispatcher_class(namespace, cpperrors):
 
     ctor_name = "dispatcher"
 
-    typedef = []
     ctors = []
     members = []
     opcode_switch = "error->error_code"
@@ -61,14 +58,14 @@ def error_dispatcher_class(namespace, cpperrors):
             ]
 
         ctors = \
-            [ "%s(uint8_t first_error)" % (ctor_name)
+            [ "%s(uint8_t first_error)" % ctor_name
             , "  : m_first_error(first_error)"
             , "{}"
             , ""
             , "%s(const xpp::%s::extension & extension)" % (ctor_name, ns)
             , "  : %s(extension->first_error)" % ctor_name
             , "{}"
-            ]
+              ]
 
     # >>> if end <<<
 
