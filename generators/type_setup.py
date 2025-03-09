@@ -83,8 +83,6 @@ def _c_complex(module):
             length += 1
         maxtypelen = max(maxtypelen, length)
 
-    ### TODO: serialization(?)
-
 
 def c_type_setup(client, module, name, postfix):
     """
