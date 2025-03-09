@@ -1,8 +1,6 @@
 """
 Type setup
 """
-from functools import reduce
-
 from accessor import Accessor
 from utils import _n, _t, _cpp, _ext, _n_item
 

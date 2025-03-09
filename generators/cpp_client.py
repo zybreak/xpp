@@ -6,14 +6,7 @@ This script converts XCB XML files into cpp code
 """
 
 import getopt
-import sys
-
-from utils import \
-    get_namespace, \
-    _n_item, \
-    _ext, \
-    _n, _t
-
+from utils import get_namespace, _n_item, _ext, _n, _t
 from cppevent import CppEvent
 from cpperror import CppError
 from parameter import Parameter

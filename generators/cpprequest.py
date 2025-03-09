@@ -1,10 +1,10 @@
 # vim: set ts=4 sws=4 sw=4:
 
-# from utils import *
 from utils import _ext, _n_item, get_namespace, _reserved_keywords
-from parameter import *
+from parameter import ParameterList
 from cppreply import CppReply
 from cppcookie import CppCookie
+from sys import stderr
 
 _templates = {}
 
@@ -149,7 +149,7 @@ def replace_class(method, class_name):
     cn = _replace_special_classes.get(class_name, class_name)
     method_name = method.replace("_" + cn, "")
     if method_name in _reserved_keywords:
-        sys.stderr.write('Reserved word "%s" used for method in class "%s", replacing with "%s"\n' % (method_name, class_name, method))
+        stderr.write('Reserved word "%s" used for method in class "%s", replacing with "%s"\n' % (method_name, class_name, method))
         return method
     else:
         return method_name

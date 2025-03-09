@@ -1,7 +1,7 @@
 # vim: set ts=4 sws=4 sw=4:
 
-import sys # stderr
-import copy # deepcopy
+from sys import stderr
+from copy import deepcopy
 
 from utils import get_namespace
 
@@ -13,7 +13,7 @@ class ObjectClass(object):
     def add(self, request):
         if (len(request.parameter_list.parameter) > 0
                 and request.parameter_list.parameter[0].c_type == self.c_name):
-            request_copy = copy.deepcopy(request)
+            request_copy = deepcopy(request)
             request_copy.parameter_list.parameter.pop(0)
             request_copy.make_wrapped()
             self.requests.append(request_copy)
@@ -30,7 +30,7 @@ class ObjectClass(object):
         methods = ""
         
         if name == "event":
-            sys.stderr.write('renaming ObjectClass %s to %s in namespace %s for %s\n' % (name, 'Event', ns, c_name))
+            stderr.write('renaming ObjectClass %s to %s in namespace %s for %s\n' % (name, 'Event', ns, c_name))
             name = "Event"
 
         for request in self.requests:
