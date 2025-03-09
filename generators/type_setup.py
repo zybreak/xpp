@@ -210,17 +210,6 @@ def c_type_setup(client, module, name, postfix):
             for bitcase in module.bitcases:
                 bitcase_name = bitcase.type.name if bitcase.type.has_name else name
                 c_accessors(client, bitcase.type, bitcase_name, bitcase_name)
-                # no list with switch as element, so no call to
-                # _c_iterator(field.type, field_name) necessary
-
-    if not module.is_bitcase:
-        if module.need_serialize:
-            if module.c_serialize_name not in client.finished_serializers:
-                client.finished_serializers.append(module.c_serialize_name)
-                _c_serialize(client, 'serialize', module)
-
-                if module.is_switch or module.var_followed_by_fixed_fields:
-                    _c_serialize(client, 'unserialize', module)
 
 
 def _c_accessors_list(client, obj, field):

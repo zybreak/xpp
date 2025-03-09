@@ -29,8 +29,7 @@ class Client(object):
 
     # global variable to keep track of serializers and
     # switch data types due to weird dependencies
-    finished_serializers = []
-    finished_switch = []
+    finished_switch: list[str] = []
 
     _cpp_request_names = []
     _cpp_request_objects = {}
@@ -43,14 +42,11 @@ class Client(object):
 
     _object_classes = {}
 
-    _hlines = []
+    _hlines: list[str] = []
     _hlevel = 0
-    _clines = []
-    _clevel = 0
     _ns = None
 
     header_file = None
-    source_file = None
     input_file = None
 
     def __init__(self):
@@ -100,7 +96,6 @@ class Client(object):
         self._interface_class.set_namespace(self._ns)
 
         self._h_setlevel(0)
-        self._c_setlevel(0)
 
         self._h('module;')
 
@@ -163,24 +158,13 @@ class Client(object):
                     hfile.write(line)
                     hfile.write('\n')
 
-        def write_source(cfile):
-            for list in self._clines:
-                for line in list:
-                    cfile.write(line)
-                    cfile.write('\n')
-
         if (self.header_file == None):
             write_header(sys.stdout)
         else:
             with open(self.header_file, "w", encoding="utf-8") as file:
                 write_header(file)
+     
                 
-        if (self.source_file == None):
-            write_source(sys.stderr)
-        else:
-            with open(self.source_file, "w", encoding="utf-8") as file:
-                write_source(file)
-
     def cpp_simple(self, module, name):
         """
         Exported function that handles cardinal type declarations.
@@ -246,18 +230,6 @@ class Client(object):
         """
         self._hlines[self._hlevel].append(fmt % args)
 
-    def _c(self, fmt, *args):
-        """
-        Writes the given line to the source file.
-        """
-        self._clines[self._clevel].append(fmt % args)
-
-    def _hc(self, fmt, *args):
-        """
-        Writes the given line to both the header and source files.
-        """
-        self._h(fmt, *args)
-        self._c(fmt, *args)
 
     # XXX See if this level thing is really necessary.
     def _h_setlevel(self, idx):
@@ -269,26 +241,17 @@ class Client(object):
             self._hlines.append([])
         self._hlevel = idx
 
-    def _c_setlevel(self, idx):
-        """
-        Changes the array that source lines are written to.
-        Supports writing to different sections of the source file.
-        """
-        while len(self._clines) <= idx:
-            self._clines.append([])
-        self._clevel = idx
-
     def parse_arguments(self):
         # Check for the argument that specifies path to the xcbgen python package.
         try:
-            opts, args = getopt.getopt(sys.argv[1:], 'p:h:c:')
+            opts, args = getopt.getopt(sys.argv[1:], 'p:h:')
 
             if len(args) == 0:
                 raise getopt.GetoptError('Missing filename')
 
         except getopt.GetoptError as err:
             print(err)
-            print('Usage: c_client.py [-p python_module_path] [-h output_header_file] [-c output_source_file] file.xml')
+            print('Usage: c_client.py [-p python_module_path] [-h output_header_file] file.xml')
             sys.exit(1)
 
         for (opt, arg) in opts:
@@ -296,8 +259,6 @@ class Client(object):
                 sys.path.insert(1, arg)
             elif opt == '-h':
                 self.header_file = arg
-            elif opt == '-c':
-                self.source_file = arg
         
         self.input_file = args[0]
         
