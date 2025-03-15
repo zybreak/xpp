@@ -4,16 +4,14 @@ _templates = {}
 
 _templates['iter_fixed'] = \
 """\
-xpp::generic::iterator<Connection,
-                       %(return_type)s,
+xpp::generic::iterator<%(return_type)s,
                        xpp::generic::signature<decltype(%(c_name)s_%(member)s), %(c_name)s_%(member)s>,
                        xpp::generic::signature<decltype(%(c_name)s_%(member)s_length), %(c_name)s_%(member)s_length>>\
 """
 
 _templates['iter_variable'] = \
 """\
-xpp::generic::iterator<Connection,
-                       %(c_type)s,
+xpp::generic::iterator<%(c_type)s,
                        xpp::generic::signature<decltype(%(iter_name)s_next), %(iter_name)s_next>,
                        xpp::generic::signature<decltype(%(iter_name)s_sizeof), %(iter_name)s_sizeof>,
                        xpp::generic::signature<decltype(%(c_name)s_%(member)s_iterator), %(c_name)s_%(member)s_iterator>>\
@@ -21,14 +19,12 @@ xpp::generic::iterator<Connection,
 
 _templates['list'] = \
 """\
-    xpp::generic::list<Connection,
-                       %s_reply_t,
+    xpp::generic::list<%s_reply_t,
                        %s
                       >
     %s(void)
     {
-      return xpp::generic::list<Connection,
-                                %s_reply_t,
+      return xpp::generic::list<%s_reply_t,
                                 %s
                                >(%s);
     }\

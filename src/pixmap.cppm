@@ -9,49 +9,40 @@ import xpp.proto.x;
 
 export namespace xpp {
 
-    template<typename Connection, template<typename, typename> class... Interfaces>
     class pixmap
-        : public xpp::generic::resource<Connection, xcb_pixmap_t,
-                                        xpp::x::pixmap, Interfaces...> {
+        : public xpp::x::pixmap {
       protected:
-        using base = xpp::generic::resource<Connection, xcb_pixmap_t,
-                                            xpp::x::pixmap, Interfaces...>;
+        using base = xpp::x::pixmap;
 
-        template<typename C, typename Create, typename Destroy>
-        pixmap(C&& c, Create&& create, Destroy&& destroy)
-            : base(base::make(std::forward<C>(c),
-                              std::forward<Create>(create),
-                              std::forward<Destroy>(destroy))) {
-        }
+        template<typename Create, typename Destroy>
+        pixmap(xcb_connection_t *c, Create&& create, Destroy&& destroy) : base(c, std::forward<Create>(create), std::forward<Destroy>(destroy)) {}
 
       public:
         using base::base;
         using base::operator=;
 
-        template<typename C>
-        static pixmap<Connection, Interfaces...>
-        create(C&& c, uint8_t depth, xcb_drawable_t drawable,
+        static pixmap
+        create(xcb_connection_t *c, uint8_t depth, xcb_drawable_t drawable,
                uint16_t width, uint16_t height) {
             return pixmap(
-                std::forward<C>(c),
-                [&](Connection const& c, xcb_pixmap_t const& pixmap) {
+                c,
+                [&](xcb_connection_t *c, xcb_pixmap_t const& pixmap) {
                 xpp::x::create_pixmap(c, depth, pixmap, drawable, width, height);
             },
-                [&](Connection const& c, xcb_pixmap_t const& pixmap) {
+                [&](xcb_connection_t *c, xcb_pixmap_t const& pixmap) {
                 xpp::x::free_pixmap(c, pixmap);
             });
         }
 
-        template<typename C>
-        static pixmap<Connection, Interfaces...>
-        create_checked(C&& c, uint8_t depth, xcb_drawable_t drawable,
+        static pixmap
+        create_checked(xcb_connection_t *c, uint8_t depth, xcb_drawable_t drawable,
                        uint16_t width, uint16_t height) {
             return pixmap(
-                std::forward<C>(c),
-                [&](Connection const& c, xcb_pixmap_t const& pixmap) {
+                c,
+                [&](xcb_connection_t *c, xcb_pixmap_t const& pixmap) {
                 xpp::x::create_pixmap_checked(c, depth, pixmap, drawable, width, height);
             },
-                [&](Connection const& c, xcb_pixmap_t const& pixmap) {
+                [&](xcb_connection_t *c, xcb_pixmap_t const& pixmap) {
                 xpp::x::free_pixmap_checked(c, pixmap);
             });
         }
@@ -59,8 +50,8 @@ export namespace xpp {
 
     namespace generic {
 
-        template<typename Connection, template<typename, typename> class... Interfaces>
-        struct traits<xpp::pixmap<Connection, Interfaces...>> {
+        template<>
+        struct traits<xpp::pixmap> {
             typedef xcb_pixmap_t type;
         };
 

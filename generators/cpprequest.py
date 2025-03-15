@@ -8,139 +8,150 @@ from sys import stderr
 
 _templates = {}
 
-_templates['void_request_function'] = \
+_templates['void_request_function_impl'] = \
 '''\
-export
-template<typename Connection, typename ... Parameter>
-void
-%s_checked(Connection && c, Parameter && ... parameter)
-{
-  xpp::generic::check<Connection, xpp::%s::error::dispatcher>(
-      std::forward<Connection>(c),
-      %s_checked(
-          std::forward<Connection>(c),
-          std::forward<Parameter>(parameter) ...));
-}
+    void %(name)s_checked(xcb_connection_t *c%(comma)s%(protos)s) {
+      xpp::generic::check/*<xpp::%(ns)s::error::dispatcher>*/(
+          c,
+          %(c_name)s_checked(c%(comma)s%(calls)s));
+    }
 
-export
-template<typename ... Parameter>
-void
-%s(Parameter && ... parameter)
-{
-  %s(std::forward<Parameter>(parameter) ...);
-}
+    void %(name)s(xcb_connection_t *c%(comma)s%(protos)s) {
+      %(c_name)s(c%(comma)s%(calls)s);
+    }
 '''
 
-def _void_request_function(ns, name, c_name):
-    return _templates['void_request_function'] % \
-            ( name
-            , ns
-            , c_name
-            , name
-            , c_name
-            )
+def _void_request_function_impl(ns, name, c_name, param):
+    return _templates['void_request_function_impl'] % {
+        "c_name": c_name,
+        "name": name,
+        "ns": ns,
+        "comma": param.comma(),
+        "protos": param.protos(param.has_defaults, param.has_defaults),
+        "calls": param.calls(False)
+    }
+
+
+_templates['void_request_function'] = \
+'''\
+    export void %(name)s_checked(xcb_connection_t *c%(protos)s);
+    export void %(name)s(xcb_connection_t *c%(protos)s);
+'''
+
+def _void_request_function(ns, name, c_name, param):
+    return _templates['void_request_function'] % {
+        "name": name,
+        "protos": param.comma()+param.protos(param.has_defaults, param.has_defaults),
+        "calls": param.comma()+param.calls(False)
+    }
 
 _templates['reply_request_function'] = \
 '''\
-export
-template<typename Connection, typename ... Parameter>
-reply::checked::%s<Connection>
-%s(Connection && c, Parameter && ... parameter)
-{
-  return reply::checked::%s<Connection>(
-      std::forward<Connection>(c), std::forward<Parameter>(parameter) ...);
-}
-
-export
-template<typename Connection, typename ... Parameter>
-reply::unchecked::%s<Connection>
-%s_unchecked(Connection && c, Parameter && ... parameter)
-{
-  return reply::unchecked::%s<Connection>(
-      std::forward<Connection>(c), std::forward<Parameter>(parameter) ...);
-}
+    export reply::checked::%(name)s %(name)s(xcb_connection_t *c%(protos)s);
+    export reply::unchecked::%(name)s %(name)s_unchecked(xcb_connection_t *c%(protos)s);
 '''
 
-def _reply_request_function(name):
-    return _templates['reply_request_function'] % \
-            ( name
-            , name
-            , name
-            , name
-            , name
-            , name)
+def _reply_request_function(name, param):
+    return _templates['reply_request_function'] % {
+        "name": name,
+        "protos": param.comma()+param.protos(param.has_defaults, param.has_defaults),
+        "calls": param.comma()+param.calls(False)
+    }
+
+_templates['reply_request_function_impl'] = \
+'''\
+    reply::checked::%(name)s %(name)s(xcb_connection_t *c%(protos)s) {
+      return reply::checked::%(name)s(c%(calls)s);
+    }
+    
+    reply::unchecked::%(name)s %(name)s_unchecked(xcb_connection_t *c%(protos)s) {
+      return reply::unchecked::%(name)s(c%(calls)s);
+    }
+'''
+
+def _reply_request_function_impl(name, param):
+    return _templates['reply_request_function_impl'] % {
+        "name": name,
+        "protos": param.comma()+param.protos(param.has_defaults, False),
+        "calls": param.comma()+param.calls(False)
+    }
+
+_templates['inline_reply_class_impl'] = \
+'''\
+    reply::checked::%(request_name)s %(class_name)s::%(method_name)s(%(protos)s) const {
+      return xpp::%(ns)s::%(request_name)s(get_connection()%(member)s%(calls)s);
+    }
+
+    reply::unchecked::%(request_name)s %(class_name)s::%(method_name)s_unchecked(%(protos)s) const {
+      return xpp::%(ns)s::%(request_name)s_unchecked(get_connection()%(member)s%(calls)s);
+    }
+'''
+
+def _inline_reply_class_impl(class_name, request_name, method_name, member, ns, protos, calls):
+    return _templates['inline_reply_class_impl'] % {
+        "class_name": class_name,
+        "member": member,
+        "method_name": method_name,
+        "ns": ns,
+        "request_name": request_name,
+        "protos": protos,
+        "calls": calls 
+    }
+
 
 _templates['inline_reply_class'] = \
 '''\
-    template<typename ... Parameter>
-    auto
-    %s(Parameter && ... parameter) const
-    -> reply::checked::%s<Connection>
-    {
-      return xpp::%s::%s(
-          connection(),
-          %s\
-          std::forward<Parameter>(parameter) ...);
-    }
-
-    template<typename ... Parameter>
-    auto
-    %s_unchecked(Parameter && ... parameter) const
-    -> reply::unchecked::%s<Connection>
-    {
-      return xpp::%s::%s_unchecked(
-          connection(),
-          %s\
-          std::forward<Parameter>(parameter) ...);
-    }
+    reply::checked::%(request_name)s %(method_name)s(%(protos)s) const;
+    reply::unchecked::%(request_name)s %(method_name)s_unchecked(%(protos)s) const;
 '''
 
-def _inline_reply_class(request_name, method_name, member, ns):
-    return _templates['inline_reply_class'] % \
-            ( method_name
-            , request_name
-            , ns
-            , request_name
-            , member
-            , method_name
-            , request_name
-            , ns
-            , request_name
-            , member
-            )
+def _inline_reply_class(request_name, method_name, member, ns, param):
+    return _templates['inline_reply_class'] % {
+            "member": member,
+            "method_name": method_name,
+            "ns": ns,
+            "request_name": request_name,
+            "protos": param.protos(param.has_defaults, param.has_defaults),
+            "calls": param.comma()+param.calls(False)
+        }
 
 _templates['inline_void_class'] = \
 '''\
-    template<typename ... Parameter>
-    void
-    %s_checked(Parameter && ... parameter) const
-    {
-      xpp::%s::%s_checked(connection(),
-                          %s\
-                          std::forward<Parameter>(parameter) ...);
-    }
-
-    template<typename ... Parameter>
-    void
-    %s(Parameter && ... parameter) const
-    {
-      xpp::%s::%s(connection(),
-                  %s\
-                  std::forward<Parameter>(parameter) ...);
-    }
+    void %(method_name)s_checked(%(protos)s) const;
+    void %(method_name)s(%(protos)s) const;
 '''
 
-def _inline_void_class(request_name, method_name, member, ns):
-    return _templates['inline_void_class'] % \
-            ( method_name
-            , ns
-            , request_name
-            , member
-            , method_name
-            , ns
-            , request_name
-            , member
-            )
+def _inline_void_class(request_name, method_name, member, ns, param):
+    return _templates['inline_void_class'] % {
+        "method_name": method_name,
+        "ns": ns,
+        "request_name": request_name,
+        "member": member,
+        "protos": param.protos(param.has_defaults, param.has_defaults),
+        "calls": param.comma()+param.calls(False)
+    }
+
+_templates['inline_void_class_impl'] = \
+    '''\
+    void %(class_name)s::%(method_name)s_checked(%(protos)s) const {
+      xpp::%(ns)s::%(request_name)s_checked(get_connection()%(member)s%(calls)s);
+    }
+
+    void %(class_name)s::%(method_name)s(%(protos)s) const {
+      xpp::%(ns)s::%(request_name)s(get_connection()%(member)s%(calls)s);
+    }
+    '''
+
+def _inline_void_class_impl(class_name, request_name, method_name, member, ns, protos, calls):
+    return _templates['inline_void_class_impl'] % {
+        "class_name": class_name,
+        "method_name": method_name,
+        "ns": ns,
+        "request_name": request_name,
+        "member": member,
+        "protos": protos,
+        "calls": calls
+    }
 
 _replace_special_classes = \
         { "gcontext" : "gc" }
@@ -178,28 +189,35 @@ class CppRequest(object):
     def make_wrapped(self):
         self.parameter_list.make_wrapped()
 
-    def make_class(self):
+    def make_class(self, header_writer, source_writer):
         cppcookie = CppCookie(self.namespace, self.is_void, self.request.name, self.reply, self.parameter_list)
 
         if self.is_void:
-            void_functions = cppcookie.make_void_functions()
-            if len(void_functions) > 0:
-                return void_functions
-            else:
-                return _void_request_function(get_namespace(self.namespace), self.request_name, self.c_name)
+            void_functions = cppcookie.make_void_functions(header_writer, source_writer)
+            if len(void_functions) == 0:
+                header_writer(_void_request_function(get_namespace(self.namespace), self.request_name, self.c_name, self.parameter_list))
+                source_writer(_void_request_function_impl(get_namespace(self.namespace), self.request_name, self.c_name, self.parameter_list))
 
         else:
             cppreply = CppReply(self.namespace, self.request.name, cppcookie, self.reply, self.accessors, self.parameter_list)
-            return cppreply.make() + "\n\n" + _reply_request_function(self.request_name)
+            cppreply.make(header_writer, source_writer)
+            header_writer("\n")
+            header_writer(_reply_request_function(self.request_name, self.parameter_list))
+            source_writer(_reply_request_function_impl(self.request_name, self.parameter_list))
 
-    def make_object_class_inline(self, is_connection, class_name=""):
+    def make_object_class_inline(self, is_connection, source_writer, class_name=""):
         member = ""
         method_name = self.name
         if not is_connection:
-            member = "resource(),\n"
+            member = ",get_resource()"
             method_name = replace_class(method_name, class_name)
+            
+        if class_name == "":
+            class_name = "interface"
 
         if self.is_void:
-            return _inline_void_class(self.request_name, method_name, member, get_namespace(self.namespace))
+            source_writer(_inline_void_class_impl(class_name, self.request_name, method_name, member, get_namespace(self.namespace), self.parameter_list.protos(self.parameter_list.has_defaults, False), self.parameter_list.comma()+self.parameter_list.calls(False)))
+            return _inline_void_class(self.request_name, method_name, member, get_namespace(self.namespace), self.parameter_list)
         else:
-            return _inline_reply_class(self.request_name, method_name, member, get_namespace(self.namespace))
+            source_writer(_inline_reply_class_impl(class_name, self.request_name, method_name, member, get_namespace(self.namespace), self.parameter_list.protos(self.parameter_list.has_defaults, False), self.parameter_list.comma()+self.parameter_list.calls(False)))
+            return _inline_reply_class(self.request_name, method_name, member, get_namespace(self.namespace), self.parameter_list)

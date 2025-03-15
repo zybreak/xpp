@@ -5,72 +5,57 @@ _templates = {}
 
 _templates['reply_class'] = \
 '''\
-namespace reply {
+    namespace reply {
 
-namespace detail {
+        namespace detail {
 
-template<typename Connection,
-         typename Check,
-         typename CookieFunction>
-class %(name)s
-  : public xpp::generic::reply<%(name)s<Connection, Check, CookieFunction>,
-                               Connection,
-                               Check,
-                               xpp::generic::signature<decltype(%(c_name)s_reply), %(c_name)s_reply>,
-                               CookieFunction>
-{
-  public:
-    typedef xpp::generic::reply<%(name)s<Connection, Check, CookieFunction>,
-                                Connection,
-                                Check,
-                                xpp::generic::signature<decltype(%(c_name)s_reply), %(c_name)s_reply>,
-                                CookieFunction>
-                                  base;
+            template<typename Check, typename CookieFunction>
+            class %(name)s : public xpp::generic::reply<Check,
+                                            xpp::generic::signature<decltype(%(c_name)s_reply), %(c_name)s_reply>,
+                                            CookieFunction>
+            {
+              public:
+                using base = xpp::generic::reply<Check, xpp::generic::signature<decltype(%(c_name)s_reply), %(c_name)s_reply>, CookieFunction>;
 
-    template<typename C, typename ... Parameter>
-    %(name)s(C && c, Parameter && ... parameter)
-      : base(std::forward<C>(c), std::forward<Parameter>(parameter) ...)
-    {}
+                template<typename ... Parameter>
+                %(name)s(xcb_connection_t *c, Parameter && ... parameter) : base(c, std::forward<Parameter>(parameter)...) {}
 
-%(make_static_getter)s\
-%(accessors)s\
-}; // class %(name)s
+            %(make_static_getter)s\
+            %(accessors)s\
+            }; // class %(name)s
 
-} // namespace detail
+        } // namespace detail
 
-namespace checked {
-template<typename Connection>
-using %(name)s = detail::%(name)s<
-    Connection, xpp::generic::checked_tag,
-    xpp::generic::signature<decltype(%(c_name)s), %(c_name)s>>;
-} // namespace checked
+        namespace checked {
+            using %(name)s = detail::%(name)s<
+                xpp::generic::checked_tag,
+                xpp::generic::signature<decltype(%(c_name)s), %(c_name)s>>;
+        } // namespace checked
 
-namespace unchecked {
-template<typename Connection>
-using %(name)s = detail::%(name)s<
-    Connection, xpp::generic::unchecked_tag,
-    xpp::generic::signature<decltype(%(c_name)s_unchecked), %(c_name)s_unchecked>>;
-} // namespace unchecked
+        namespace unchecked {
+            using %(name)s = detail::%(name)s<
+                xpp::generic::unchecked_tag,
+                xpp::generic::signature<decltype(%(c_name)s_unchecked), %(c_name)s_unchecked>>;
+        } // namespace unchecked
 
-} // namespace reply
+    } // namespace reply
 '''
 
-def _reply_class(name, c_name, ns, cookie, accessors):
+def _reply_class(name, c_name, ns, cookie, accessors, param):
     return _templates['reply_class'] % {
         "name": name,
         "c_name": c_name,
         "make_static_getter": cookie.make_static_getter(),
-        "accessors": accessors
+        "accessors": accessors,
+        "protos": param.comma()+param.protos(param.has_defaults, param.has_defaults),
+        "calls": param.comma()+param.calls(False)
     }
 
 _templates['reply_member_accessor'] = \
 '''\
     template<typename ReturnType = %s, typename ... Parameter>
-    ReturnType
-    %s(Parameter && ... parameter)
-    {
-      using make = xpp::generic::factory::make<Connection,
-                                               decltype(this->get()->%s),
+    ReturnType %s(Parameter && ... parameter) {
+      using make = xpp::generic::factory::make<decltype(this->get()->%s),
                                                ReturnType,
                                                Parameter ...>;
       return make()(this->m_c,
@@ -103,7 +88,7 @@ class CppReply(object):
     def make_accessors(self):
         return "\n".join(["\n%s\n" % a for a in self.accessors])
 
-    def make(self):
+    def make(self, header_writer, source_writer):
         accessors = [self.make_accessors()]
         naccessors = len(self.accessors)
 
@@ -123,5 +108,8 @@ class CppReply(object):
         result = ""
         result += _reply_class(
             self.request_name, self.c_name, get_namespace(self.namespace),
-            self.cookie, "\n".join(accessors))
+            self.cookie, "\n".join(accessors), self.parameter_list)
+       
+        header_writer(result)
+        
         return result

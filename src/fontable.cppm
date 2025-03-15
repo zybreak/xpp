@@ -9,13 +9,9 @@ import xpp.proto.x;
 
 export namespace xpp {
 
-    template<typename Connection, template<typename, typename> class... Interfaces>
-    class fontable
-        : public xpp::generic::resource<Connection, xcb_fontable_t,
-                                        xpp::x::fontable, Interfaces...> {
+    class fontable : public xpp::x::fontable {
       protected:
-        using base = xpp::generic::resource<Connection, xcb_fontable_t,
-                                            xpp::x::fontable, Interfaces...>;
+        using base = xpp::x::fontable;
 
       public:
         using base::base;
@@ -24,8 +20,8 @@ export namespace xpp {
 
     namespace generic {
 
-        template<typename Connection, template<typename, typename> class... Interfaces>
-        struct traits<xpp::fontable<Connection, Interfaces...>> {
+        template<>
+        struct traits<xpp::fontable> {
             typedef xcb_fontable_t type;
         };
 

@@ -9,12 +9,9 @@ import xpp.proto.x;
 
 export namespace xpp {
 
-    template<typename Connection, template<typename, typename> class... Interfaces>
-    class atom
-        : public xpp::generic::resource<Connection, xcb_atom_t,
-                                        xpp::x::atom, Interfaces...> {
+    class atom : public xpp::x::atom {
       protected:
-        using base = xpp::generic::resource<Connection, xcb_atom_t, Interfaces...>;
+        using base = xpp::x::atom;
 
       public:
         using base::base;
@@ -23,8 +20,8 @@ export namespace xpp {
 
     namespace generic {
 
-        template<typename Connection, template<typename, typename> class... Interfaces>
-        struct traits<xpp::atom<Connection, Interfaces...>> {
+        template<>
+        struct traits<xpp::atom> {
             typedef xcb_atom_t type;
         };
 

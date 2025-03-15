@@ -1,48 +1,58 @@
 module;
 #include <xcb/xcb.h>
 
-#define GENERATE_HAS_MEMBER(member)                                                   \
-                                                                                      \
-    template<typename T, bool B>                                                      \
-    class HasMember_##member {                                                        \
-      private:                                                                        \
-        using Yes = char[2];                                                          \
-        using No = char[1];                                                           \
-                                                                                      \
-        struct Fallback {                                                             \
-            int member;                                                               \
-        };                                                                            \
-        struct Derived : T,                                                           \
-                         Fallback {};                                                 \
-                                                                                      \
-        template<typename U>                                                          \
-        static No& test(decltype(U::member)*);                                        \
-        template<typename U>                                                          \
-        static Yes& test(U*);                                                         \
-                                                                                      \
-      public:                                                                         \
-        static constexpr bool RESULT = sizeof(test<Derived>(nullptr)) == sizeof(Yes); \
-    };                                                                                \
-                                                                                      \
-    template<typename T>                                                              \
-    class HasMember_##member<T, false> {                                              \
-      public:                                                                         \
-        static constexpr bool RESULT = false;                                         \
-    };                                                                                \
-                                                                                      \
-    template<typename T>                                                              \
-    struct has_member_##member                                                        \
-        : public std::integral_constant<                                              \
-              bool,                                                                   \
-              HasMember_##member<T, std::is_class<T>::value>::RESULT> {};
-
 export module xpp.generic.input_iterator_adapter;
 
 import std;
 
 export {
-    GENERATE_HAS_MEMBER(first)
-    GENERATE_HAS_MEMBER(second)
+    template<typename T, bool B>
+    class HasMember_first {
+      private:
+        using Yes = char[2];
+        using No = char[1];
+        struct Fallback {
+            int first;
+        };
+        struct Derived : T,
+                         Fallback {};
+        template<typename U>
+        static No& test(decltype(U::first)*);
+        template<typename U>
+        static Yes& test(U*);
+
+      public:static constexpr bool RESULT = sizeof(test<Derived>(nullptr)) == sizeof(Yes);
+    };
+    template<typename T>
+    class HasMember_first<T, false> {
+      public:static constexpr bool RESULT = false;
+    };
+    template<typename T>
+    struct has_member_first : public std::integral_constant<bool, HasMember_first<T, std::is_class<T>::value>::RESULT> {};
+    
+    template<typename T, bool B>
+    class HasMember_second {
+      private:
+        using Yes = char[2];
+        using No = char[1];
+        struct Fallback {
+            int second;
+        };
+        struct Derived : T,
+                         Fallback {};
+        template<typename U>
+        static No& test(decltype(U::second)*);
+        template<typename U>
+        static Yes& test(U*);
+
+      public:static constexpr bool RESULT = sizeof(test<Derived>(nullptr)) == sizeof(Yes);
+    };
+    template<typename T>
+    class HasMember_second<T, false> {
+      public:static constexpr bool RESULT = false;
+    };
+    template<typename T>
+    struct has_member_second : public std::integral_constant<bool, HasMember_second<T, std::is_class<T>::value>::RESULT> {};
 
     // namespace iterator {
 

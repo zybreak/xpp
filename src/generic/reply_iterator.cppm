@@ -59,22 +59,19 @@ export namespace xpp {
         template<typename... Types>
         class iterator;
 
-        template<typename Connection,
-                 typename Object,
+        template<typename Object,
                  typename NextTemplate,
                  NextTemplate& Next,
                  typename SizeOfTemplate,
                  SizeOfTemplate& SizeOf,
                  typename GetIteratorTemplate,
                  GetIteratorTemplate& GetIterator>
-        class iterator<Connection,
-                       Object,
+        class iterator<Object,
                        xpp::generic::signature<NextTemplate, Next>,
                        xpp::generic::signature<SizeOfTemplate, SizeOf>,
                        xpp::generic::signature<GetIteratorTemplate, GetIterator>> {
           protected:
-            using self = iterator<Connection,
-                                  Object,
+            using self = iterator<Object,
                                   xpp::generic::signature<NextTemplate, Next>,
                                   xpp::generic::signature<SizeOfTemplate, SizeOf>,
                                   xpp::generic::signature<GetIteratorTemplate, GetIterator>>;
@@ -84,7 +81,7 @@ export namespace xpp {
             using Reply = typename std::remove_pointer<typename std::remove_const<const_reply_ptr>::type>::type;
             using XcbIterator = typename get_iterator_traits::result_type;
 
-            Connection m_c;
+            xcb_connection_t *m_c;
             std::shared_ptr<Reply> m_reply;
             std::stack<std::size_t> m_lengths;
             XcbIterator m_iterator;
@@ -99,9 +96,8 @@ export namespace xpp {
             iterator(void) {
             }
 
-            template<typename C>
-            iterator(C&& c, std::shared_ptr<Reply> const& reply)
-                : m_c(std::forward<C>(c)), m_reply(reply), m_iterator(GetIterator(reply.get())) {
+            iterator(xcb_connection_t *c, std::shared_ptr<Reply> const& reply)
+                : m_c(c), m_reply(reply), m_iterator(GetIterator(reply.get())) {
             }
 
             bool
@@ -158,16 +154,12 @@ export namespace xpp {
                 return copy;
             }
 
-            template<typename C>
-            static self
-            begin(C&& c, std::shared_ptr<Reply> const& reply) {
-                return self{std::forward<C>(c), reply};
+            static self begin(xcb_connection_t *c, std::shared_ptr<Reply> const& reply) {
+                return self{c, reply};
             }
 
-            template<typename C>
-            static self
-            end(C&& c, std::shared_ptr<Reply> const& reply) {
-                auto it = self{std::forward<C>(c), reply};
+            static self end(xcb_connection_t *c, std::shared_ptr<Reply> const& reply) {
+                auto it = self{c, reply};
                 it.m_iterator.rem = 0;
                 return it;
             }
@@ -175,14 +167,12 @@ export namespace xpp {
 
         // iterator for fixed size data fields
 
-        template<typename Connection,
-                 typename Object,
+        template<typename Object,
                  typename AccessorTemplate,
                  AccessorTemplate& Accessor,
                  typename LengthTemplate,
                  LengthTemplate& Length>
-        class iterator<Connection,
-                       Object,
+        class iterator<Object,
                        signature<AccessorTemplate, Accessor>,
                        signature<LengthTemplate, Length>> {
           protected:
@@ -193,9 +183,9 @@ export namespace xpp {
 
             using data_t = typename std::conditional<std::is_void<Data>::value,
                                                      typename xpp::generic::conversion_type<Object>::type, Data>::type;
-            using make = xpp::generic::factory::make<Connection, data_t, Object>;
+            using make = xpp::generic::factory::make<data_t, Object>;
 
-            Connection m_c;
+            xcb_connection_t *m_c;
             std::size_t m_index = 0;
             std::shared_ptr<Reply> m_reply;
 
@@ -206,17 +196,14 @@ export namespace xpp {
             typedef Object const& reference;
             typedef typename std::input_iterator_tag iterator_category;
 
-            typedef iterator<Connection,
-                             Object,
+            using self = iterator<Object,
                              signature<AccessorTemplate, Accessor>,
-                             signature<LengthTemplate, Length>>
-                self;
+                             signature<LengthTemplate, Length>>;
 
             iterator(void) {
             }
 
-            template<typename C>
-            iterator(C&& c,
+            iterator(xcb_connection_t *c,
                      std::shared_ptr<Reply> const& reply,
                      std::size_t index)
                 : m_c(c), m_index(index), m_reply(reply) {
@@ -278,26 +265,22 @@ export namespace xpp {
             }
         };  // class iterator
 
-        template<typename Connection, typename Reply, typename Iterator>
+        template<typename Reply, typename Iterator>
         class list {
           private:
             // before public part, to make decltype in begin() & end() work!
-            Connection m_c;
+            xcb_connection_t *m_c;
             std::shared_ptr<Reply> m_reply;
 
           public:
-            template<typename C>
-            list(C&& c, std::shared_ptr<Reply> const& reply)
-                : m_c(std::forward<C>(c)), m_reply(reply) {
+            list(xcb_connection_t *c, std::shared_ptr<Reply> const& reply) : m_c(c), m_reply(reply) {
             }
 
-            auto
-            begin(void) -> decltype(Iterator::begin(this->m_c, this->m_reply)) {
+            auto begin() -> decltype(Iterator::begin(this->m_c, this->m_reply)) {
                 return Iterator::begin(m_c, m_reply);
             }
 
-            auto
-            end(void) -> decltype(Iterator::end(this->m_c, this->m_reply)) {
+            auto end() -> decltype(Iterator::end(this->m_c, this->m_reply)) {
                 return Iterator::end(m_c, m_reply);
             }
         };  // class list

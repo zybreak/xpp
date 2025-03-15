@@ -35,45 +35,43 @@ export {
                 : public detail::sink<Event>,
                   public detail::sink<Events>... {};
 
-            template<typename Connection, typename... Extensions>
+            template<typename... Extensions>
             class registry
-                : public xpp::x::event::dispatcher<Connection>,
-                  public Extensions::template event_dispatcher<Connection>... {
+                : //public xpp::x::event::dispatcher,
+                  public Extensions::event_dispatcher... {
               public:
                 typedef unsigned int priority;
 
-                template<typename C>
-                explicit registry(C &&c)
-                    : xpp::x::event::dispatcher<Connection>(std::forward<C>(c)), Extensions::template event_dispatcher<Connection>(std::forward<C>(c), c.template extension<Extensions>())..., m_c(std::forward<C>(c)) {
+                explicit registry(xcb_connection_t *c)
+                    : /*xpp::x::event::dispatcher(c),*/ /*Extensions::event_dispatcher(c, c.template extension<Extensions>())..., */m_c(c) {
                 }
 
-                bool
-                dispatch(std::shared_ptr<xcb_generic_event_t> const &event) const {
+#if 0
+                bool dispatch(std::shared_ptr<xcb_generic_event_t> const &event) const {
                     return dispatch<xpp::x::extension, Extensions...>(event);
                 }
-
+#endif
+                
                 template<typename Event, typename... Rest>
-                void
-                attach(priority p, sink<Event, Rest...> *s) {
+                void attach(priority p, sink<Event, Rest...> *s) {
                     attach<sink<Event, Rest...>, Event, Rest...>(p, s);
                 }
 
                 template<typename Event, typename... Rest>
-                void
-                detach(priority p, sink<Event, Rest...> *s) {
+                void detach(priority p, sink<Event, Rest...> *s) {
                     detach<sink<Event, Rest...>, Event, Rest...>(p, s);
                 }
 
               private:
                 typedef std::multimap<priority, detail::dispatcher *> priority_map;
 
-                Connection m_c;
+                xcb_connection_t *m_c;
                 std::unordered_map<uint8_t, priority_map> m_dispatchers;
 
-                template<typename Event>
-                uint8_t opcode(xpp::x::extension const &) const {
-                    return Event::opcode();
-                }
+                //template<typename Event>
+                //uint8_t opcode(xpp::x::extension const &) const {
+                //    return Event::opcode();
+                //}
 
                 template<typename Event, typename Extension>
                 uint8_t opcode(Extension const &extension) const {
@@ -82,12 +80,11 @@ export {
 
                 template<typename Event>
                 uint8_t opcode(void) const {
-                    return opcode<Event>(m_c.template extension<typename Event::extension>());
+                    return 0; //opcode<Event>(m_c.template extension<typename Event::extension>());
                 }
 
                 template<typename Event>
-                void
-                handle(Event const &event) const {
+                void handle(Event const &event) const {
                     auto it = m_dispatchers.find(opcode<Event>());
                     if (it != m_dispatchers.end()) {
                         for (auto &item : it->second) {
@@ -97,42 +94,37 @@ export {
                 }
 
                 struct handler {
-                    handler(registry<Connection, Extensions...> const &registry)
+                    handler(registry<Extensions...> const &registry)
                         : m_registry(registry) {
                     }
 
-                    registry<Connection, Extensions...> const &m_registry;
+                    registry<Extensions...> const &m_registry;
 
                     template<typename Event>
-                    void
-                    operator()(Event const &event) const {
+                    void operator()(Event const &event) const {
                         m_registry.handle(event);
                     }
                 };
 
                 template<typename Extension>
-                bool
-                dispatch(std::shared_ptr<xcb_generic_event_t> const &event) const {
-                    typedef typename Extension::template event_dispatcher<Connection> const &dispatcher;
+                bool dispatch(std::shared_ptr<xcb_generic_event_t> const &event) const {
+                    typedef typename Extension::event_dispatcher const &dispatcher;
                     return static_cast<dispatcher>(*this)(handler(*this), event);
                 }
 
                 template<typename Extension, typename Next, typename... Rest>
-                bool
-                dispatch(std::shared_ptr<xcb_generic_event_t> const &event) const {
+                bool dispatch(std::shared_ptr<xcb_generic_event_t> const &event) const {
                     dispatch<Extension>(event);
                     return dispatch<Next, Rest...>(event);
                 }
 
                 template<typename Sink, typename Event>
-                void
-                attach(priority p, Sink *s) {
+                void attach(priority p, Sink *s) {
                     attach(p, s, opcode<Event>());
                 }
 
                 template<typename Sink, typename Event, typename Next, typename... Rest>
-                void
-                attach(priority p, Sink *s) {
+                void attach(priority p, Sink *s) {
                     attach(p, s, opcode<Event>());
                     attach<Sink, Next, Rest...>(p, s);
                 }
@@ -142,20 +134,17 @@ export {
                 }
 
                 template<typename Sink, typename Event>
-                void
-                detach(priority p, Sink *s) {
+                void detach(priority p, Sink *s) {
                     detach(p, s, opcode<Event>());
                 }
 
                 template<typename Sink, typename Event, typename Next, typename... Rest>
-                void
-                detach(priority p, Sink *s) {
+                void detach(priority p, Sink *s) {
                     detach(p, s, opcode<Event>());
                     detach<Sink, Next, Rest...>(p, s);
                 }
 
-                void
-                detach(priority p, detail::dispatcher *d, uint8_t opcode) {
+                void detach(priority p, detail::dispatcher *d, uint8_t opcode) {
                     auto it = m_dispatchers.find(opcode);
 
                     if (it == m_dispatchers.end()) {

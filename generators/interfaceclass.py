@@ -9,30 +9,23 @@ _templates = {}
 
 _templates['interface_class'] = \
 """\
-export
-template<typename Derived, typename Connection>
-class interface
-{
-  protected:
-    Connection
-    connection(void) const
-    {
-      return static_cast<const Derived *>(this)->connection();
-    }
+    export class interface {
+      protected:
+        virtual xcb_connection_t* get_connection() const = 0;
 
-  public:
-%s\
+      public:
+    %s\
 
-    virtual ~interface(void) {}
+        virtual ~interface(void) {}
 
-    const interface<Derived, Connection> &
-    %s(void)
-    {
-      return *this;
-    }
+    #if 0
+        const interface<Derived> & %s(void) {
+          return *this;
+        }
+    #endif
 
-%s\
-}; // class interface
+    %s\
+    }; // class interface
 """
 
 _ignore_events = \
@@ -59,25 +52,27 @@ class InterfaceClass(object):
     def set_namespace(self, namespace):
         self.namespace = namespace
 
-    def make_proto(self):
+    def make_proto(self, header_writer, source_writer):
         ns = get_namespace(self.namespace)
         methods = ""
         for request in self.requests:
-            methods += request.make_object_class_inline(True) + "\n\n"
+            methods += request.make_object_class_inline(True, source_writer) + "\n"
 
         typedef = []
-        if self.namespace.is_ext:
-            typedef = [ "typedef xpp::%s::extension extension;" % ns ]
+        #if self.namespace.is_ext:
+            #typedef = [ "using extension = xpp::%s::extension;" % ns ]
 
         if len(typedef) > 0:
-            typedef = "".join(["    " + s for s in typedef]) + "\n\n"
+            typedef = "".join(["    " + s for s in typedef]) + "\n"
         else:
             typedef = ""
 
 
-        return (_templates['interface_class']
-                % (typedef, ns, methods)) + \
-              '\n' + event_dispatcher_class(self.namespace, self.events) + \
-              '\n' + error_dispatcher_class(self.namespace, self.errors)
+        header_writer((_templates['interface_class']
+                % (typedef, ns, methods)))
+        
+        # + \
+        #'\n' + event_dispatcher_class(self.namespace, self.events) + \
+        #'\n' + error_dispatcher_class(self.namespace, self.errors)
 
 ########## INTERFACECLASS ##########

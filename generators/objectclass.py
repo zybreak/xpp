@@ -23,48 +23,36 @@ class ObjectClass(object):
         name = (get_namespace(namespace) + "_") if namespace.is_ext else ""
         self.c_name = "xcb_%s_t" % (name + self.name.lower())
 
-    def make_inline(self):
+    def make_inline(self, header_writer, source_writer):
         ns = get_namespace(self.namespace)
         name = self.name.lower()
         c_name = self.c_name
         methods = ""
         
         if name == "event":
-            stderr.write('renaming ObjectClass %s to %s in namespace %s for %s\n' % (name, 'Event', ns, c_name))
-            name = "Event"
+            #stderr.write('renaming ObjectClass %s to %s in namespace %s for %s\n' % (name, 'Event', ns, c_name))
+            #name = "Event"
+            return "// ignored ObjectClass %s" % name
 
         for request in self.requests:
-            methods += request.make_object_class_inline(False, name) + "\n\n"
+            methods += request.make_object_class_inline(False, source_writer, name) + "\n"
 
-        if methods == "":
-            return ""
-        else:
-            return \
+        if methods != "":
+            header_writer(
 """\
-export
-template<typename Derived, typename Connection>
-class %s
-{
-  protected:
-    Connection
-    connection(void) const
-    {
-      return static_cast<const Derived *>(this)->connection();
-    }
+    export class %(name)s : public xpp::generic::resource<%(c_name)s> {
+      public:
+        using res = %(c_name)s;
+        virtual ~%(name)s(void) = default;
+        
+        using Create = std::function<void(xcb_connection_t*, %(c_name)s const &)>;
+        using Destroy = std::function<void(xcb_connection_t*, %(c_name)s const &)>;
+        %(name)s(xcb_connection_t *c, Create create, Destroy destroy) : xpp::generic::resource<%(c_name)s>(c, create, destroy) {}
 
-    const %s &
-    resource(void) const
-    {
-      return static_cast<const Derived *>(this)->resource();
-    }
-
-  public:
-    virtual ~%s(void) {}
-
-%s
-}; // class %s
-""" % (name,   # class %s
-       c_name, # %s resource(void) { ... }
-       name, # virtual ~%s(void)
-       methods,
-       name) # }; // class %s
+    %(methods)s
+    }; // class %(name)s
+""" % {
+    "name": name,
+    "c_name": c_name,
+    "methods": methods
+})

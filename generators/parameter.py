@@ -6,10 +6,8 @@ _templates = {}
 
 _templates['initializer'] = \
     '''\
-    typedef typename value_type<%s, ! std::is_pointer<%s>::value>::type
-              vector_type;
-    std::vector<vector_type> %s =
-      { value_iterator<%s>(%s), value_iterator<%s>(%s) };
+    using vector_type = typename value_type<%s, ! std::is_pointer<%s>::value>::type;
+    std::vector<vector_type> %s = { value_iterator<%s>(%s), value_iterator<%s>(%s) };
     '''
 
 
@@ -194,9 +192,9 @@ class ParameterList(object):
 
         # end: for index, param in enumerate(self.parameter):
 
-        for k, v in list(lenfields.items()):
-            if len(v) > 1:
-                sys.stderr.write("list: %s, %s\n" % (k, v))
+        #for k, v in list(lenfields.items()):
+            #if len(v) > 1:
+                #sys.stderr.write("list: %s, %s\n" % (k, v))
 
     def wrapped_calls(self, sort):
         return self.calls(sort, params=self.wrap_calls)

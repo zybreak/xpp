@@ -2,52 +2,60 @@ from utils import _ext, _n_item, get_namespace
 
 _templates = {}
 
+_templates['void_cookie_function_impl'] = \
+'''\
+    void
+    %(template)s\
+    %(name)s_checked(xcb_connection_t *c%(protos)s)
+    {%(initializer)s\
+      xpp::generic::check/*<xpp::%(ns)s::error::dispatcher>*/(
+          c,
+          %(c_name)s_checked(c%(calls)s));
+    }
+
+    void
+    %(template)s\
+    %(name)s(xcb_connection_t *c%(protos)s)
+    {%(initializer)s\
+      %(c_name)s(c%(calls)s);
+    }
+'''
+
+def _void_cookie_function_impl(ns, name, c_name, template, return_value, protos, calls, initializer):
+    if len(template) == 0: template = ""
+    return _templates['void_cookie_function_impl'] % {
+        "template": template,
+        "calls": calls,
+        "c_name": c_name,
+        "initializer": initializer,
+        "name": name,
+        "ns": ns,
+        "protos": protos
+    }
+
 _templates['void_cookie_function'] = \
 '''\
-export
-%s\
-void
-%s_checked(Connection && c%s)
-{%s\
-  xpp::generic::check<Connection, xpp::%s::error::dispatcher>(
-      std::forward<Connection>(c),
-      %s_checked(std::forward<Connection>(c)%s));
-}
+    export
+    %(template)s\
+    void %(name)s_checked(xcb_connection_t *c%(protos)s);
 
-export
-%s\
-void
-%s(Connection && c%s)
-{%s\
-  %s(std::forward<Connection>(c)%s);
-}
+    export
+    %(template)s\
+    void %(name)s(xcb_connection_t *c%(protos)s);
 '''
 
 def _void_cookie_function(ns, name, c_name, template, return_value, protos, calls, initializer):
-    if len(template) == 0: template = "template<typename Connection>\n"
-    return _templates['void_cookie_function'] % \
-            ( template
-            , name
-            , protos
-            , initializer
-            , ns
-            , c_name
-            , calls
-            , template
-            , name
-            , protos
-            , initializer
-            , c_name
-            , calls
-            )
+    if len(template) == 0: template = ""
+    return _templates['void_cookie_function'] % {
+        "template": template,
+        "name": name,
+        "protos": protos
+    }
 
 _templates['cookie_static_getter'] = \
 '''\
 %s\
-    static
-    %s
-    cookie(xcb_connection_t * const c%s)
-    {%s\
+    static %s cookie(xcb_connection_t * const c%s) {%s\
       return base::cookie(c%s);
     }
 '''
@@ -83,7 +91,7 @@ class CppCookie(object):
         return self.parameter_list.protos(sort, defaults)
 
     def iterator_template(self, indent="    ", tail="\n"):
-        prefix = "template<typename " + ("Connection, typename " if self.is_void else "")
+        prefix = "template<typename "
         return indent + prefix \
                 + ", typename ".join(self.parameter_list.iterator_templates \
                                    + self.parameter_list.templates) \
@@ -99,6 +107,24 @@ class CppCookie(object):
 
     def iterator_initializers(self):
         return self.parameter_list.iterator_initializers()
+    
+    def void_function_impls(self, protos, calls, template="", initializer=[]):
+        inits = "" if len(initializer) > 0 else "\n"
+        for i in initializer:
+            inits += "\n"
+            for line in i.split('\n'):
+                inits += "      " + line + "\n"
+
+        return_value = "xcb_void_cookie_t"
+
+        return _void_cookie_function_impl(get_namespace(self.namespace),
+                                     self.request_name,
+                                     self.c_name,
+                                     template,
+                                     return_value,
+                                     self.comma() + protos,
+                                     self.comma() + calls,
+                                     inits)
 
     def void_functions(self, protos, calls, template="", initializer=[]):
         inits = "" if len(initializer) > 0 else "\n"
@@ -169,36 +195,31 @@ class CppCookie(object):
 
         return result
 
-    def make_void_functions(self):
-        default = self.void_functions(self.protos(False, False), self.calls(False))
-
-        if self.parameter_list.has_defaults:
-            default = self.void_functions(self.protos(True, True), self.calls(False))
-
-        wrapped = ""
-        if self.parameter_list.want_wrap:
-            wrapped = \
-                self.void_functions(self.iterator_protos(True, True),
-                        self.iterator_calls(False),
-                        self.iterator_template(indent=""),
-                        self.iterator_initializers())
-
-        default_args = ""
-        if self.parameter_list.is_reordered():
-            default_args = \
-                self.void_functions(self.protos(True, True), self.calls(False))
-
+    def make_void_functions(self, header_writer, source_writer):
+        
         result = ""
 
         if (self.parameter_list.has_defaults
             or self.parameter_list.is_reordered()
             or self.parameter_list.want_wrap):
-            result += default
+            result += "a"
+            header_writer("//has_defaults\n")
+            header_writer(self.void_functions(self.protos(self.parameter_list.has_defaults, self.parameter_list.has_defaults), self.calls(False)))
+            source_writer(self.void_function_impls(self.protos(self.parameter_list.has_defaults, False), self.calls(False)))
 
         if self.parameter_list.is_reordered():
-            result += "\n" + default_args
+            result += "a"
+            header_writer("\n//is_reordered\n")
+            source_writer("\n")
+            header_writer(self.void_functions(self.protos(True, True), self.calls(False)))
+            source_writer(self.void_function_impls(self.protos(True, False), self.calls(False)))
 
         if self.parameter_list.want_wrap:
-            result += "\n" + wrapped
-
+            result += "a"
+            header_writer("\n//want_wrap\n")
+            header_writer(self.void_functions(self.iterator_protos(True, True),
+                                self.iterator_calls(False),
+                                self.iterator_template(indent=""),
+                                self.iterator_initializers()))
+            
         return result

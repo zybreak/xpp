@@ -4,113 +4,91 @@ export module xpp.generic.resource;
 
 import std;
 
+#if 0
 namespace xpp::generic::detail {
 
-    template<typename Connection, typename Resource, typename ResourceId,
-             template<typename, typename> class... Interfaces>
-    class interfaces
-        : public Interfaces<interfaces<Connection, Resource, ResourceId, Interfaces...>,
-                            Connection>... {
+    template<typename ResourceId>
+    class interfaces : public Interfaces<interfaces<Derived, Resource, ResourceId, Interfaces...>>... {
       public:
-        ResourceId const &
-        resource(void) const {
-            return *static_cast<Resource const &>(*this);
+        ResourceId const & resource(void) const {
+            return *static_cast<Derived const &>(*this);
         }
 
-        Connection
-        connection(void) const {
-            return static_cast<Resource const &>(*this).connection();
-        }
+        //xpp::connection& connection(void) const {
+        //    return static_cast<Resource const &>(*this).connection();
+        //}
     };  // class interfaces
 
 };  // namespace xpp::generic::detail
+#endif
 
 export namespace xpp {
-
+    
     namespace generic {
 
-        template<typename Connection, typename ResourceId,
-                 template<typename, typename> class... Interfaces>
-        class resource
-            : public detail::interfaces<Connection,
-                                        resource<Connection, ResourceId, Interfaces...>,
-                                        ResourceId, Interfaces...> {
+        template<typename ResourceId>
+        class resource {
           protected:
-            using self = resource<Connection, ResourceId, Interfaces...>;
-
-            Connection m_c;
+            xcb_connection_t *m_c;
             // reference counting for Resource object
             std::shared_ptr<ResourceId> m_resource;
 
-            resource(Connection c)
-                : m_c(c) {
-            }
-
-            template<typename C, typename Create, typename Destroy>
-            static self
-            make(C &&c, Create create, Destroy destroy) {
-                self resource(std::forward<C>(c));
-
-                auto xid = xcb_generate_id(std::forward<C>(c));
+          public:
+            using Create = std::function<void(xcb_connection_t*, ResourceId const &)>;
+            using Destroy = std::function<void(xcb_connection_t*, ResourceId const &)>;
+            resource(xcb_connection_t *c, Create create, Destroy destroy) : m_c(c) {
+                auto xid = xcb_generate_id(c);
 
                 // class create before instatiating the shared_ptr
                 // create might fail and throw an error, hence shared_ptr would hold an
                 // invalid xid, causing possibly another exception in destroy()
                 // when create() throws, then the shared_ptr will not be created
-                create(std::forward<C>(c), xid);
+                create(c, static_cast<ResourceId>(xid));
 
-                resource.m_resource =
+                m_resource =
                     std::shared_ptr<ResourceId>(new ResourceId(xid),
                                                 [&](ResourceId *r) {
-                    destroy(resource.m_c, *r);
+                    destroy(m_c, *r);
                     delete r;
                 });
-
-                return resource;
+            }
+            
+            resource(xcb_connection_t *c, ResourceId const &resource_id)
+                : m_c(c), m_resource(std::make_shared<ResourceId>(resource_id)) {
             }
 
-          public:
-            template<typename C>
-            resource(C &&c, ResourceId const &resource_id)
-                : m_c(std::forward<C>(c)), m_resource(std::make_shared<ResourceId>(resource_id)) {
-            }
-
-            resource(resource<Connection, ResourceId, Interfaces...> const &other)
+            resource(resource<ResourceId> const &other)
                 : m_c(other.m_c), m_resource(other.m_resource) {
             }
 
-            virtual void
-            operator=(resource<Connection, ResourceId, Interfaces...> const &other) {
+            virtual void operator=(resource<ResourceId> const &other) {
                 m_c = other.m_c;
                 m_resource = other.m_resource;
             }
 
-            virtual void
-            operator=(ResourceId const &resource) {
+            virtual void operator=(ResourceId const &resource) {
                 m_resource = std::make_shared<ResourceId>(resource);
             }
 
-            virtual ResourceId const &
-            operator*(void) const {
+            virtual ResourceId const & operator*() const {
                 return *m_resource;
             }
 
-            virtual
-            operator ResourceId const &(void) const {
+            virtual operator ResourceId const &() const {
                 return *m_resource;
             }
 
-            Connection
-            connection(void) const {
+            xcb_connection_t* get_connection() const {
                 return m_c;
+            }
+            
+            ResourceId const & get_resource() const {
+                return *m_resource;
             }
         };  // class resource
 
-        template<typename Connection, typename ResourceId,
-                 template<typename, typename> class... Interfaces>
-        std::ostream &
-        operator<<(std::ostream &os,
-                   resource<Connection, ResourceId, Interfaces...> const &resource) {
+        template<typename ResourceId>
+        std::ostream & operator<<(std::ostream &os, resource<ResourceId> const &resource) {
             return os << std::hex << "0x" << *resource << std::dec;
         }
 

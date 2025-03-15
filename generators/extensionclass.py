@@ -4,40 +4,31 @@ class ExtensionClass(object):
     def __init__(self, namespace):
         self.namespace = namespace
 
-    def make_class(self):
-        # if not self.namespace.is_ext:
-        #     return ""
-        # else:
+    def make_class(self, header_writer, source_writer):
         ns = get_namespace(self.namespace)
         if self.namespace.is_ext:
-            base = "\n  : public xpp::generic::extension<extension, &xcb_%s_id>\n" % ns
-            ctor = "    using base = xpp::generic::extension<extension, &xcb_%s_id>;\n" % ns + \
-                   "    using base::base;\n"
+            base = " : public xpp::generic::extension "
+            ctor = "    extension(xcb_connection_t *c) : xpp::generic::extension(c, &xcb_%s_id) {}\n" % ns
         else:
             base = " "
             ctor = ""
 
-        return \
+        header_writer(
 '''\
-export
-template<typename Derived, typename Connection>
-class interface;
+    //export class interface;
 
-namespace event { export template<typename Connection> class dispatcher; }
-namespace error { export class dispatcher; }
+    //namespace event { export class dispatcher; }
+    //namespace error { export class dispatcher; }
 
-export
-class extension%s{
-  public:
-%s\
-    template<typename Derived, typename Connection>
-    using interface = xpp::%s::interface<Derived, Connection>;
-    template<typename Connection>
-    using event_dispatcher = xpp::%s::event::dispatcher<Connection>;
-    using error_dispatcher = xpp::%s::error::dispatcher;
-};\
-''' % (base,
-       ctor,
-       ns, # typedef xpp::interface::%s interface;
-       ns, # typedef xpp::event::dispatcher::%s dispatcher;
-       ns) # typedef xpp::error::dispatcher::%s dispatcher;
+    export class extension%(base)s{
+      public:
+    %(ctor)s\
+        //using interface = xpp::%(ns)s::interface<Derived>;
+        using event_dispatcher = xpp::%(ns)s::event::dispatcher;
+        using error_dispatcher = xpp::%(ns)s::error::dispatcher;
+    };\
+''' % {
+    "base":base,
+   "ctor":ctor,
+   "ns":ns
+})

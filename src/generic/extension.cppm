@@ -4,49 +4,42 @@ export module xpp.generic.extension;
 
 import std;
 
-export namespace xpp {
-    namespace generic {
+export namespace xpp::generic {
 
-        template<typename Derived, xcb_extension_t *Id>
-        class extension {
-          public:
-            extension(xcb_connection_t *const c)
-                : m_c(c) {
-                prefetch();
-            }
+    class extension {
+      public:
+        explicit extension(xcb_connection_t *c, xcb_extension_t *id) : m_c(c), id(id) {
+            prefetch();
+        }
 
-            xcb_query_extension_reply_t const &
-            operator*(void) const {
-                return *m_extension;
-            }
+        xcb_query_extension_reply_t const & operator*() const {
+            return *m_extension;
+        }
 
-            xcb_query_extension_reply_t const *
-            operator->(void) const {
-                return m_extension;
-            }
+        xcb_query_extension_reply_t const * operator->() const {
+            return m_extension;
+        }
 
-            operator xcb_query_extension_reply_t const *(void) const {
-                return m_extension;
-            }
+        operator xcb_query_extension_reply_t const *() const {
+            return m_extension;
+        }
 
-            Derived &
-            get(void) {
-                m_extension = xcb_get_extension_data(m_c, Id);
-                return static_cast<Derived &>(*this);
-            }
+        auto get(this auto& self) -> decltype(self) {
+            self.m_extension = xcb_get_extension_data(self.m_c, self.id);
+            return self;
+        }
 
-            Derived &
-            prefetch(void) {
-                xcb_prefetch_extension_data(m_c, Id);
-                return static_cast<Derived &>(*this);
-            }
+        auto prefetch(this auto& self) -> decltype(self) {
+            xcb_prefetch_extension_data(self.m_c, self.id);
+            return self;
+        }
 
-          private:
-            xcb_connection_t *m_c = nullptr;
-            // The result must not be freed.
-            // This storage is managed by the cache itself.
-            xcb_query_extension_reply_t const *m_extension = nullptr;
-        };  // class extension
+      private:
+        xcb_connection_t *m_c = nullptr;
+        xcb_extension_t *id = nullptr;
+        // The result must not be freed.
+        // This storage is managed by the cache itself.
+        xcb_query_extension_reply_t const *m_extension = nullptr;
+    };  // class extension
 
-    }  // namespace generic
-}  // namespace xpp
+}  // namespace xpp::generic

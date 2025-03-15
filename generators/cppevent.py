@@ -7,11 +7,8 @@ from resource_classes import _resource_classes
 
 _field_accessor_template_specialization = \
 '''\
-template<typename Connection>
 template<>
-%s
-%s<Connection>::%s<%s>(void) const
-{
+%s %s::%s<%s>(void) const {
   return %s;
 }\
 '''
@@ -21,11 +18,8 @@ _templates = {}
 _templates['field_accessor_template'] = \
 '''\
     template<typename ReturnType = %s, typename ... Parameter>
-    ReturnType
-    %s(Parameter && ... parameter) const
-    {
-      using make = xpp::generic::factory::make<Connection,
-                                               decltype((*this)->%s),
+    ReturnType %s(Parameter && ... parameter) const {
+      using make = xpp::generic::factory::make<decltype((*this)->%s),
                                                ReturnType,
                                                Parameter ...>;
       return make()(this->m_c,
@@ -47,18 +41,13 @@ _templates['event_dispatcher_class'] = \
 namespace event {
 
 export
-template<typename Connection>
-class dispatcher
-{
+class dispatcher {
   public:
 %s\
 %s\
 
     template<typename Handler>
-    bool
-    operator()(Handler%s,
-               const std::shared_ptr<xcb_generic_event_t> &%s) const
-    {\
+    bool operator()(Handler%s, const std::shared_ptr<xcb_generic_event_t> &%s) const {\
 %s
       return false;
     }
@@ -85,19 +74,15 @@ def event_dispatcher_class(namespace, cppevents):
     ctor_name = "dispatcher"
 
     opcode_switch = "event->response_type & ~0x80"
-    typedef = [ "typedef xpp::%s::extension extension;\n" % ns ]
+    typedef = [ "using extension = xpp::%s::extension;\n" % ns ]
 
     members = \
         [ "protected:"
-        , "  Connection m_c;"
+        , "  xcb_connection_t *m_c;"
         ]
 
     ctors = \
-        [ "template<typename C>"
-        , "%s(C && c)" % ctor_name
-        , "  : m_c(std::forward<C>(c))"
-        , "{}"
-        ]
+        ["%(ctor_name)s(xcb_connection_t *c) : m_c(c) {}" % {"ctor_name": ctor_name}]
 
     # >>> if begin <<<
     if namespace.is_ext:
@@ -110,15 +95,13 @@ def event_dispatcher_class(namespace, cppevents):
         members += [ "  uint8_t m_first_event;" ]
 
         ctors = \
-            [ "template<typename C>"
-            , "%s(C && c, uint8_t first_event)" % ctor_name
-            , "  : m_c(std::forward<C>(c))"
+            [ "%s(xcb_connection_t *c, uint8_t first_event)" % ctor_name
+            , "  : m_c(c)"
             , "  , m_first_event(first_event)"
             , "{}"
             , ""
-            , "template<typename C>"
-            , "%s(C && c, const xpp::%s::extension & extension)" % (ctor_name, ns)
-            , "  : %s(std::forward<C>(c), extension->first_event)" % ctor_name
+            , "%s(xcb_connection_t *c, const xpp::%s::extension & extension)" % (ctor_name, ns)
+            , "  : %s(c, extension->first_event)" % ctor_name
             , "{}"
               ]
 
@@ -151,7 +134,7 @@ def event_switch_cases(cppevents, arg_switch, arg_handler, arg_event, ns):
     cases = ""
     first_event_arg = ", m_first_event" if ns.is_ext else ""
     templ = [ "        case %s:"
-            , "          %s(" % arg_handler + "%s<Connection>" + "(m_c%s, %s));" % (first_event_arg, arg_event)
+            , "          %s(" % arg_handler + "%s" + "(m_c%s, %s));" % (first_event_arg, arg_event)
             , "          return true;"
             , ""
             , ""
@@ -219,7 +202,7 @@ class CppEvent(object):
         ns = get_namespace(self.namespace)
         return "xpp::" + ns + "::event::" + self.get_name()
 
-    def make_class(self):
+    def make_class(self, header_writer, source_writer):
         member_accessors = []
         member_accessors_special = []
         for field in self.fields:
@@ -236,17 +219,16 @@ class CppEvent(object):
         ns = get_namespace(self.namespace)
 
         ctor = \
-            [ "template<typename C>"
-            , "%s(C && c," % self.get_name()
+            [ "%s(xcb_connection_t *c," % self.get_name()
             , (" " * len(self.get_name())) + " const std::shared_ptr<xcb_generic_event_t> & event)"
             , "  : base(event)"
-            , "  , m_c(std::forward<C>(c))"
+            , "  , m_c(c)"
             , "{}"
             ]
 
         m_first_event = ""
 
-        typedef = [ "typedef xpp::%s::extension extension;" % ns ]
+        typedef = [ "using extension = xpp::%s::extension;" % ns ]
 
         description = \
             [ "static std::string description(void)"
@@ -267,31 +249,27 @@ class CppEvent(object):
         if self.namespace.is_ext:
             opcode_accessor += \
                 [ ""
-                , "static uint8_t opcode(uint8_t first_event)"
-                , "{"
+                , "static uint8_t opcode(uint8_t first_event) {"
                 , "  return first_event + opcode();"
                 , "}"
                 , ""
-                , "static uint8_t opcode(const xpp::%s::extension & extension)" % ns
-                , "{"
+                , "static uint8_t opcode(const xpp::%s::extension & extension) {" % ns
                 , "  return opcode(extension->first_event);"
                 , "}"
                 ]
 
             first_event = \
-                [ "uint8_t first_event(void)"
-                , "{"
+                [ "uint8_t first_event(void) {"
                 , "  return m_first_event;"
                 , "}"
                 ]
 
             ctor = \
-                [ "template<typename C>"
-                , "%s(C && c," % self.get_name()
+                [ "%s(xcb_connection_t *c," % self.get_name()
                 , (" " * len(self.get_name())) + " uint8_t first_event,"
                 , (" " * len(self.get_name())) + " const std::shared_ptr<xcb_generic_event_t> & event)"
                 , "  : base(event)"
-                , "  , m_c(std::forward<C>(c))"
+                , "  , m_c(c)"
                 , "  , m_first_event(first_event)"
                 , "{}"
                 ]
@@ -330,17 +308,14 @@ class CppEvent(object):
         else:
             first_event = ""
 
-        return \
+        header_writer(
 '''
 namespace event {
 export
-template<typename Connection>
-class %s
-  : public xpp::generic::event<%s>
-{
+class %s : public xpp::generic::event<%s> {
   public:
 %s\
-    typedef xpp::generic::event<%s> base;
+    using base = xpp::generic::event<%s>;
 
 %s\
 
@@ -351,7 +326,7 @@ class %s
 %s\
 %s\
   protected:
-    Connection m_c;
+    xcb_connection_t *m_c;
 %s\
 }; // class %s
 %s\
@@ -368,4 +343,4 @@ class %s
        member_accessors,
        m_first_event,
        self.get_name(), # // class %s
-       member_accessors_special)
+       member_accessors_special))

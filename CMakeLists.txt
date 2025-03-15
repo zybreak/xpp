@@ -98,7 +98,7 @@ if(NOT XCB_PROTOS)
     "xf86dri"
     "xfixes"
     "xinerama"
-    "xinput"
+    #"xinput" BROKEN SWITCH
     "xkb"
     "xprint"
     "xproto"
@@ -160,24 +160,30 @@ endforeach(PROTO_RAW)
 set(PROTO_GEN_DIR "${GEN_SRC}/proto")
 file(MAKE_DIRECTORY ${PROTO_GEN_DIR})
 set(PROTO_GEN_FILES "")
+set(PROTO_GEN_IMPL_FILES "")
 foreach(PROTO ${PROTO_LIST})
     string(REGEX REPLACE "proto\$" "" PROTO_OUTPUT ${PROTO})
     set(OUTPUT_FILE ${PROTO_GEN_DIR}/${PROTO_OUTPUT}.cppm)
+    set(OUTPUT_IMPL_FILE ${PROTO_GEN_DIR}/${PROTO_OUTPUT}.cpp)
     execute_process(
-            OUTPUT_FILE ${OUTPUT_FILE} 
             COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/generators/cpp_client.py -p "${PYTHON_XCBGEN}"
-            ${XCBPROTO_XCBINCLUDEDIR}/${PROTO}.xml > ${OUTPUT_FILE}
+            -h ${OUTPUT_FILE}
+            -c ${OUTPUT_IMPL_FILE}
+            ${XCBPROTO_XCBINCLUDEDIR}/${PROTO}.xml
             RESULT_VARIABLE result)
     if(NOT result EQUAL 0)
         message(FATAL_ERROR "xcb-gen failed for ${PROTO}")
     endif()
     add_custom_command(
-            OUTPUT ${OUTPUT_FILE}
+            OUTPUT ${OUTPUT_FILE} ${OUTPUT_IMPL_FILE}
             CODEGEN
             COMMAND ${Python3_EXECUTABLE} ${PROJECT_SOURCE_DIR}/generators/cpp_client.py -p "${PYTHON_XCBGEN}"
-            ${XCBPROTO_XCBINCLUDEDIR}/${PROTO}.xml > ${OUTPUT_FILE})
+            -h ${OUTPUT_FILE}
+            -c ${OUTPUT_IMPL_FILE}
+            ${XCBPROTO_XCBINCLUDEDIR}/${PROTO}.xml)
     set_source_files_properties(${OUTPUT_FILE} PROPERTIES GENERATED TRUE)
     list(APPEND PROTO_GEN_FILES ${OUTPUT_FILE})
+    list(APPEND PROTO_GEN_IMPL_FILES ${OUTPUT_IMPL_FILE})
 endforeach(PROTO)
 
 
@@ -205,7 +211,10 @@ endforeach ()
 string(APPEND DEPENDENCIES ")\n")
 
 generate_export_header(xpp)
-target_sources(xpp PRIVATE src/core.cpp
+target_sources(xpp PRIVATE
+        src/core.cpp
+        src/generic/request.cpp
+        ${PROTO_GEN_IMPL_FILES}
         PUBLIC
         FILE_SET cxx_modules TYPE CXX_MODULES
         BASE_DIRS src ${GEN_SRC}

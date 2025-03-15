@@ -12,45 +12,40 @@ export namespace xpp {
             template<typename ReturnType>
             class make_object {
               public:
-                template<typename Connection, typename... Parameter>
-                ReturnType
-                operator()(Connection &&, Parameter &&...parameter) const {
-                    return ReturnType{std::forward<Parameter>(parameter)...};
+                template<typename... Parameter>
+                ReturnType operator()(xcb_connection_t *c, Parameter &&...parameter) const {
+                    return ReturnType{c, std::forward<Parameter>(parameter)...};
                 }
             };
 
             template<typename ReturnType>
             class make_object_with_member {
               public:
-                template<typename Member, typename Connection, typename... Parameter>
-                ReturnType
-                operator()(Connection &&c, Member &&member, Parameter &&...parameter) const {
-                    return ReturnType{std::forward<Member>(member), std::forward<Connection>(c), std::forward<Parameter>(parameter)...};
+                template<typename Member, typename... Parameter>
+                ReturnType operator()(xcb_connection_t *c, Member &&member, Parameter &&...parameter) const {
+                    return ReturnType{c, std::forward<Member>(member), std::forward<Parameter>(parameter)...};
                 }
             };
 
             template<typename ReturnType>
             class make_object_with_connection {
               public:
-                template<typename Connection, typename... Parameter>
-                ReturnType
-                operator()(Connection &&c, Parameter &&...parameter) const {
-                    return ReturnType{std::forward<Connection>(c), std::forward<Parameter>(parameter)...};
+                template<typename... Parameter>
+                ReturnType operator()(xcb_connection_t *c, Parameter &&...parameter) const {
+                    return ReturnType{c, std::forward<Parameter>(parameter)...};
                 }
             };
 
             template<typename ReturnType>
             class make_fundamental {
               public:
-                template<typename Connection, typename Member, typename... Parameter>
-                ReturnType
-                operator()(Connection &&, Member &&member) const {
+                template<typename Member, typename... Parameter>
+                ReturnType operator()(xcb_connection_t *c, Member &&member) const {
                     return std::forward<Member>(member);
                 }
             };
 
-            template<typename Connection,
-                     typename MemberType,
+            template<typename MemberType,
                      typename ReturnType,
                      typename... Parameter>
             class make
@@ -60,16 +55,9 @@ export namespace xpp {
                       typename std::conditional<
                           std::is_constructible<ReturnType,
                                                 MemberType,
-                                                Connection,
                                                 Parameter...>::value,
                           make_object_with_member<ReturnType>,
-                          typename std::conditional<
-                              std::is_constructible<ReturnType,
-                                                    Connection,
-                                                    MemberType,
-                                                    Parameter...>::value,
-                              make_object_with_connection<ReturnType>,
-                              make_object<ReturnType>>::type>::type>::type {};
+                          make_object<ReturnType>>::type>::type {};
 
         }  // namespace factory
 

@@ -5,3 +5,7 @@ target_compile_options(demo01 PUBLIC "-Wno-deprecated-declarations")
 add_executable(demo02 demo_02.cpp)
 target_link_libraries(demo02 PUBLIC xpp::xpp)
 target_compile_options(demo02 PUBLIC "-Wno-deprecated-declarations")
+
+add_executable(demo03 demo_03.cpp)
+target_link_libraries(demo03 PUBLIC xpp::xpp)
+target_compile_options(demo03 PUBLIC "-Wno-deprecated-declarations")

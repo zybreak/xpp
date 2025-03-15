@@ -9,15 +9,12 @@ _templates['error_dispatcher_class'] = \
 '''\
 namespace error {
 
-export class dispatcher
-{
+export class dispatcher {
   public:
 %s\
 %s\
 
-    void
-    operator()(const std::shared_ptr<xcb_generic_error_t> &%s) const
-    {
+    void operator()(const std::shared_ptr<xcb_generic_error_t> &%s) const {
 %s\
     }
 
@@ -46,7 +43,7 @@ def error_dispatcher_class(namespace, cpperrors):
     members = []
     opcode_switch = "error->error_code"
 
-    typedef = [ "typedef xpp::%s::extension extension;\n" % ns ]
+    typedef = [ "using extension = xpp::%s::extension;\n" % ns ]
 
     # >>> if begin <<<
     if namespace.is_ext:
@@ -136,7 +133,7 @@ class CppError(object):
         ns = get_namespace(self.namespace)
         return "xpp::" + ns + "::error::" + self.get_name()
 
-    def make_class(self):
+    def make_class(self, header_writer, source_writer):
         ns = get_namespace(self.namespace)
         typedef = []
         members = []
@@ -185,12 +182,10 @@ class CppError(object):
         name = self.name
         if self.name in _reserved_keywords: name = self.name + "_"
 
-        return \
+        header_writer(
 '''
 namespace error {
-class %s
-  : public xpp::generic::error<%s>
-{
+class %s : public xpp::generic::error<%s> {
   public:
 %s\
 
@@ -199,8 +194,7 @@ class %s
     virtual ~%s(void) {}
 
 %s
-    std::string_view description(void) const noexcept override
-    {
+    std::string_view description(void) const noexcept override {
       return "%s";
     }
 %s\
@@ -215,4 +209,4 @@ class %s
        opcode_accessor,
        self.opcode_name, # static constexpr const char * opcode_literal
        members,
-       self.get_name()) # // class %s
+       self.get_name())) # // class %s

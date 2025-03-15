@@ -36,10 +36,13 @@ class Client(object):
     _object_classes = {}
 
     _hlines: list[str] = []
+    _clines: list[str] = []
     _hlevel = 0
+    _clevel = 0
     _ns = None
 
     header_file = None
+    source_file = None
     input_file = None
 
     def __init__(self):
@@ -89,6 +92,21 @@ class Client(object):
         self._interface_class.set_namespace(self._ns)
 
         self._h_setlevel(0)
+        self._c_setlevel(0)
+        
+        self._c('module;')
+        if self._ns.header.lower() == 'xkb':
+            self._c('#define explicit _explicit')
+        self._c('#include <xcb/' + _get_xcb_include(self, self._ns.header.lower()) + '>')
+        if self._ns.header.lower() == 'xkb':
+            self._c('#undef _explicit')
+        self._c('module xpp.proto.%s;', get_namespace(self._ns).lower())
+        self._c('')
+        self._c('import std;')
+        self._c('import xpp.generic;')
+        self._c('import xpp.connection;')
+        self._c('')
+        self._c('namespace xpp::%s {' % get_namespace(self._ns))
 
         self._h('module;')
 
@@ -115,49 +133,57 @@ class Client(object):
         Writes out all the stored content lines, then closes the files.
         """
 
-        self._h('')
-        self._h(ExtensionClass(self._ns).make_class())
+        #self._h('// extension')
+        #ExtensionClass(self._ns).make_class(self._h, self._c)
 
-        for cpp_event in self._cpp_events:
-            self._h(cpp_event.make_class())
+        #self._h('// events')
+        #for cpp_event in self._cpp_events:
+        #    cpp_event.make_class(self._h, self._c)
 
-        self._h('')
+        #self._h('// errors')
+        #for cpp_error in self._cpp_errors:
+        #    cpp_error.make_class(self._h, self._c)
 
-        for cpp_error in self._cpp_errors:
-            self._h(cpp_error.make_class())
-
-        self._h('')
-
+        self._h('// ################ REQUESTS  ################')
         for name in self._cpp_request_names:
-            self._h("%s", self._cpp_request_objects[name].make_class())
+            self._cpp_request_objects[name].make_class(self._h, self._c)
 
-        self._h('')
-
+        self._h('// ########### OBJECT CLASSES ################# ')
         for key in self._object_classes:
-            self._h(self._object_classes[key].make_inline())
+            self._object_classes[key].make_inline(self._h, self._c)
 
-        self._h('')
-        self._h(self._interface_class.make_proto())
+        self._h('// ################ INTERFACES ##################')
+        self._interface_class.make_proto(self._h, self._c)
 
         self._h('')
         self._h("} // namespace xpp::%s" % get_namespace(self._ns))
 
         self._h('')
 
+
+        self._c('')
+        self._c("} // namespace xpp::%s" % get_namespace(self._ns))
+
         # Write header file
-        def write_header(hfile):
-            for list in self._hlines:
+        def write_file(file, lines):
+            for list in lines:
                 for line in list:
-                    hfile.write(line)
-                    hfile.write('\n')
+                    file.write(line)
+                    file.write('\n')
 
         if (self.header_file == None):
-            write_header(sys.stdout)
+            write_file(sys.stdout, self._hlines)
         else:
             with open(self.header_file, "w", encoding="utf-8") as file:
-                write_header(file)
-     
-                
+                write_file(file, self._hlines)
+
+        if (self.source_file == None):
+            write_file(sys.stdout, self._clines)
+        else:
+            with open(self.source_file, "w", encoding="utf-8") as file:
+                write_file(file, self._clines)
+
+
     def cpp_simple(self, module, name):
         """
         Exported function that handles cardinal type declarations.
@@ -224,6 +250,13 @@ class Client(object):
         self._hlines[self._hlevel].append(fmt % args)
 
 
+    def _c(self, fmt, *args):
+        """
+        Writes the given line to the source file.
+        """
+        self._clines[self._clevel].append(fmt % args)
+        
+        
     # XXX See if this level thing is really necessary.
     def _h_setlevel(self, idx):
         """
@@ -233,18 +266,27 @@ class Client(object):
         while len(self._hlines) <= idx:
             self._hlines.append([])
         self._hlevel = idx
+        
+    def _c_setlevel(self, idx):
+        """
+        Changes the array that source lines are written to.
+        Supports writing to different sections of the source file.
+        """
+        while len(self._clines) <= idx:
+            self._clines.append([])
+        self._clevel = idx
 
     def parse_arguments(self):
         # Check for the argument that specifies path to the xcbgen python package.
         try:
-            opts, args = getopt.getopt(sys.argv[1:], 'p:h:')
+            opts, args = getopt.getopt(sys.argv[1:], 'p:h:c:')
 
             if len(args) == 0:
                 raise getopt.GetoptError('Missing filename')
 
         except getopt.GetoptError as err:
             print(err)
-            print('Usage: c_client.py [-p python_module_path] [-h output_header_file] file.xml')
+            print('Usage: c_client.py [-p python_module_path] [-h output_header_file] [-c output_source_file] file.xml')
             sys.exit(1)
 
         for (opt, arg) in opts:
@@ -252,6 +294,8 @@ class Client(object):
                 sys.path.insert(1, arg)
             elif opt == '-h':
                 self.header_file = arg
+            elif opt == '-c':
+                self.source_file = arg
         
         self.input_file = args[0]
         
