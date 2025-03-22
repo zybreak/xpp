@@ -5,6 +5,20 @@
 This script converts XCB XML files into cpp code
 """
 
+# Must create an "output" dictionary before any xcbgen imports.
+output = {
+    'open': lambda module: client.c_open(module),
+    'close': lambda module: client.c_close(module),
+    'simple': lambda xtype, name: client.cpp_simple(xtype, name),
+    'enum': lambda xtype, name: None,
+    'struct': lambda xtype, name: None,
+    'union': lambda xtype, name: None,
+    'request': lambda xtype, name: client.cpp_request(xtype, name),
+    'event': lambda xtype, name: client.cpp_event(xtype, name),
+    'error': lambda xtype, name: client.cpp_error(xtype, name),
+    'eventstruct': lambda xtype, name: None,
+}
+
 import getopt
 from utils import get_namespace, _n_item, _ext, _n, _t
 from cppevent import CppEvent
@@ -16,13 +30,10 @@ from interfaceclass import InterfaceClass
 from extensionclass import ExtensionClass
 from resource_classes import _resource_classes
 from type_setup import c_type_setup, c_accessors
-
+from xcbgen.state import Module
+from xcbgen.xtypes import *
 
 class Client(object):
-
-    # global variable to keep track of serializers and
-    # switch data types due to weird dependencies
-    finished_switch: list[str] = []
 
     _cpp_request_names = []
     _cpp_request_objects = {}
@@ -99,7 +110,7 @@ class Client(object):
             self._c('#define explicit _explicit')
         self._c('#include <xcb/' + _get_xcb_include(self, self._ns.header.lower()) + '>')
         if self._ns.header.lower() == 'xkb':
-            self._c('#undef _explicit')
+            self._c('#undef explicit')
         self._c('module xpp.proto.%s;', get_namespace(self._ns).lower())
         self._c('')
         self._c('import std;')
@@ -114,7 +125,7 @@ class Client(object):
             self._h('#define explicit _explicit')
         self._h('#include <xcb/' + _get_xcb_include(self, self._ns.header.lower()) + '>')
         if self._ns.header.lower() == 'xkb':
-            self._h('#undef _explicit')
+            self._h('#undef explicit')
         self._h('')
         self._h('export module xpp.proto.%s;', get_namespace(self._ns).lower())
         self._h('')
@@ -184,62 +195,65 @@ class Client(object):
                 write_file(file, self._clines)
 
 
-    def cpp_simple(self, module, name):
+    def cpp_simple(self, xtype, name):
         """
         Exported function that handles cardinal type declarations.
         These are types which are typedef'd to one of the CARDx's, char, float, etc.
         """
-        c_type_setup(self, module, name, ())
+        c_type_setup(self._ns, xtype, name, ())
 
-        if module.name != name:
+        if xtype.name != name:
             # Typedef
             self._h_setlevel(0)
 
 
-    def cpp_request(self, module, name):
+    def cpp_request(self, xtype, name):
         """
         Exported function that handles request declarations.
         """
 
-        c_type_setup(self, module, name, ('request',))
+        c_type_setup(self._ns, xtype, name, ('request',))
 
-        if module.reply:
+        if xtype.reply:
 
-            c_type_setup(self, module.reply, name, ('reply',))
+            c_type_setup(self._ns, xtype.reply, name, ('reply',))
 
             # Request prototypes
-            self._cpp_request_helper(module, name, False)
+            self._cpp_request_helper(xtype, name, False)
 
             # Reply accessors
-            c_accessors(self, module.reply, name + ('reply',), name)
+            request_name = _ext(_n_item(xtype.reply.name[-1]))
+
+            if request_name in client._cpp_request_objects:
+                client._cpp_request_objects[request_name].accessors.extend(c_accessors(self._ns, xtype.reply, name + ('reply',), name))
 
         else:
             # Request prototypes
-            self._cpp_request_helper(module, name, True)
+            self._cpp_request_helper(xtype, name, True)
 
-    def cpp_event(self, module, name):
+    def cpp_event(self, xtype, name):
         """
         Exported function that handles event declarations.
         """
 
-        c_type_setup(self, module, name, ('event',))
+        c_type_setup(self._ns, xtype, name, ('event',))
 
         opcode = _n(name, self._ns).upper()
-        c_name = _t(module.name + ('event',), self._ns)
+        c_name = _t(xtype.name + ('event',), self._ns)
 
-        cpp_event = CppEvent(module.opcodes[name], opcode, c_name, self._ns, name, module.fields)
+        cpp_event = CppEvent(xtype.opcodes[name], opcode, c_name, self._ns, name, xtype.fields)
         self._cpp_events.append(cpp_event)
         self._interface_class.add_event(cpp_event)
 
-    def cpp_error(self, module, name):
+    def cpp_error(self, xtype, name):
         """
         Exported function that handles error declarations.
         """
-        c_type_setup(self, module, name, ('error',))
+        c_type_setup(self._ns, xtype, name, ('error',))
 
         opcode_name = _n(name, self._ns).upper()
-        c_name = _t(module.name + ('error',), self._ns)
-        cpp_error = CppError(module, self._ns, name, c_name, module.opcodes[name], opcode_name)
+        c_name = _t(xtype.name + ('error',), self._ns)
+        cpp_error = CppError(xtype, self._ns, name, c_name, xtype.opcodes[name], opcode_name)
         self._cpp_errors.append(cpp_error)
         self._interface_class.add_error(cpp_error)
 
@@ -325,35 +339,7 @@ def _get_xcb_include(client, ns):
 
 # Main routine starts here
 if __name__ == "__main__":
-    client = Client()
-
-    # Must create an "output" dictionary before any xcbgen imports.
-    output = {
-        'open': lambda module: client.c_open(module),
-        'close': lambda module: client.c_close(module),
-        'simple': lambda module, name: client.cpp_simple(module, name),
-        'enum': lambda x, y: None,
-        'struct': lambda x, y: None,
-        'union': lambda x, y: None,
-        'request': lambda module, name: client.cpp_request(module, name),
-        'event': lambda module, name: client.cpp_event(module, name),
-        'error': lambda module, name: client.cpp_error(module, name),
-        'eventstruct': lambda x, y: None,
-    }
-
     # Import the module class
-    try:
-        from xcbgen.state import Module
-        from xcbgen.xtypes import *
-    except ImportError:
-        print('''
-    Failed to load the xcbgen Python package!
-    Make sure that xcb/proto installed it on your Python path.
-    If not, you will need to create a .pth file or define $PYTHONPATH
-    to extend the path.
-    Refer to the README file in xcb/proto for more info.
-    ''')
-        raise
-
+    client = Client()
     client.parse_arguments()
     client.generate()

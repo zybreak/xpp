@@ -34,6 +34,9 @@ if (XPP_MASTER_PROJECT AND NOT DEFINED CMAKE_VISIBILITY_INLINES_HIDDEN)
   #set(CMAKE_VISIBILITY_INLINES_HIDDEN ON)
 endif ()
 
+if (XPP_MASTER_PROJECT)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -Wpedantic")
+endif ()
 #
 # Process dependencies
 #
@@ -283,3 +286,18 @@ install(FILES ${CMAKE_CURRENT_LIST_DIR}/LICENSE DESTINATION ${CMAKE_INSTALL_DATA
 
 add_subdirectory(tests EXCLUDE_FROM_ALL)
 add_subdirectory(examples EXCLUDE_FROM_ALL)
+
+if($ENV{CLION_IDE})
+    # Hack to resolve import std in clion
+    add_library(unused_std_target STATIC)
+
+    target_sources(unused_std_target
+            PRIVATE
+            FILE_SET CXX_MODULES
+            BASE_DIRS /usr/share/libc++/v1
+            FILES /usr/share/libc++/v1/std.cppm /usr/share/libc++/v1/std.compat.cppm)
+    
+    # Hack to make sure the directory with generated sources is not excluded  https://youtrack.jetbrains.com/issue/CPP-22009/CLion-have-issues-with-resolving-sources-from-cmake-build-debug-when-there-is-more-than-one-configuration#focus=Comments-27-4376486.0-0
+    include("${CMAKE_BINARY_DIR}/CMakeLists.txt")
+    add_dependencies(xpp fake)
+endif()

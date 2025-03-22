@@ -4,24 +4,24 @@ _templates = {}
 
 _templates['void_cookie_function_impl'] = \
 '''\
-    void
+    %(export)s
     %(template)s\
-    %(name)s_checked(xcb_connection_t *c%(protos)s)
+    void %(name)s_checked(xcb_connection_t *c%(protos)s)
     {%(initializer)s\
       xpp::generic::check/*<xpp::%(ns)s::error::dispatcher>*/(
           c,
           %(c_name)s_checked(c%(calls)s));
     }
 
-    void
+    %(export)s
     %(template)s\
-    %(name)s(xcb_connection_t *c%(protos)s)
+    void %(name)s(xcb_connection_t *c%(protos)s)
     {%(initializer)s\
       %(c_name)s(c%(calls)s);
     }
 '''
 
-def _void_cookie_function_impl(ns, name, c_name, template, return_value, protos, calls, initializer):
+def _void_cookie_function_impl(ns, name, c_name, template, return_value, protos, calls, initializer, export = ""):
     if len(template) == 0: template = ""
     return _templates['void_cookie_function_impl'] % {
         "template": template,
@@ -30,7 +30,8 @@ def _void_cookie_function_impl(ns, name, c_name, template, return_value, protos,
         "initializer": initializer,
         "name": name,
         "ns": ns,
-        "protos": protos
+        "protos": protos,
+        "export": export
     }
 
 _templates['void_cookie_function'] = \
@@ -108,7 +109,7 @@ class CppCookie(object):
     def iterator_initializers(self):
         return self.parameter_list.iterator_initializers()
     
-    def void_function_impls(self, protos, calls, template="", initializer=[]):
+    def void_function_impls(self, protos, calls, template="", initializer=[], export = ""):
         inits = "" if len(initializer) > 0 else "\n"
         for i in initializer:
             inits += "\n"
@@ -124,7 +125,8 @@ class CppCookie(object):
                                      return_value,
                                      self.comma() + protos,
                                      self.comma() + calls,
-                                     inits)
+                                     inits,
+                                      export)
 
     def void_functions(self, protos, calls, template="", initializer=[]):
         inits = "" if len(initializer) > 0 else "\n"
@@ -163,10 +165,12 @@ class CppCookie(object):
 
 
     def make_static_getter(self):
-        default = self.static_reply_methods(self.protos(False, False), self.calls(False))
+        default = ""
 
         if self.parameter_list.has_defaults:
             default = self.static_reply_methods(self.protos(True, True), self.calls(False))
+        else:
+            default = self.static_reply_methods(self.protos(False, False), self.calls(False))
 
         wrapped = ""
         if self.parameter_list.want_wrap:
@@ -199,27 +203,29 @@ class CppCookie(object):
         
         result = ""
 
-        if (self.parameter_list.has_defaults
-            or self.parameter_list.is_reordered()
-            or self.parameter_list.want_wrap):
-            result += "a"
-            header_writer("//has_defaults\n")
-            header_writer(self.void_functions(self.protos(self.parameter_list.has_defaults, self.parameter_list.has_defaults), self.calls(False)))
+        if self.parameter_list.has_defaults or self.parameter_list.is_reordered() or self.parameter_list.want_wrap:
+
+            result += "// has_defaults\n"
+            if self.parameter_list.has_defaults:
+                result += self.void_functions(self.protos(True, True), self.calls(False))
+            else:
+                result += self.void_functions(self.protos(False, False), self.calls(False))
+                
             source_writer(self.void_function_impls(self.protos(self.parameter_list.has_defaults, False), self.calls(False)))
-
+        
         if self.parameter_list.is_reordered():
-            result += "a"
-            header_writer("\n//is_reordered\n")
-            source_writer("\n")
-            header_writer(self.void_functions(self.protos(True, True), self.calls(False)))
+            result += "\n// is_reordered\n"
+            result += self.void_functions(self.protos(True, True), self.calls(False))
             source_writer(self.void_function_impls(self.protos(True, False), self.calls(False)))
-
+        
         if self.parameter_list.want_wrap:
-            result += "a"
-            header_writer("\n//want_wrap\n")
-            header_writer(self.void_functions(self.iterator_protos(True, True),
+            result += "\n// want_wrap\n"
+            result += self.void_function_impls(self.iterator_protos(True, True),
                                 self.iterator_calls(False),
                                 self.iterator_template(indent=""),
-                                self.iterator_initializers()))
+                                self.iterator_initializers(),
+                                export="export")
             
+        header_writer(result)
+        
         return result

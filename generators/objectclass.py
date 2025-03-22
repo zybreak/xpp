@@ -43,13 +43,15 @@ class ObjectClass(object):
     export class %(name)s : public xpp::generic::resource<%(c_name)s> {
       public:
         using res = %(c_name)s;
-        virtual ~%(name)s(void) = default;
+        using base = xpp::generic::resource<%(c_name)s>;
         
-        using Create = std::function<void(xcb_connection_t*, %(c_name)s const &)>;
-        using Destroy = std::function<void(xcb_connection_t*, %(c_name)s const &)>;
-        %(name)s(xcb_connection_t *c, Create create, Destroy destroy) : xpp::generic::resource<%(c_name)s>(c, create, destroy) {}
+        virtual ~%(name)s() = default;
+        
+        %(name)s(xcb_connection_t *c, base::Create create, base::Destroy destroy) : xpp::generic::resource<%(c_name)s>(c, create, destroy) {}
+        
+        %(name)s(xcb_connection_t *c, %(c_name)s const &resource_id) : xpp::generic::resource<%(c_name)s>(c, resource_id) {}
 
-    %(methods)s
+%(methods)s
     }; // class %(name)s
 """ % {
     "name": name,

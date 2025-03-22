@@ -101,8 +101,8 @@ def _inline_reply_class_impl(class_name, request_name, method_name, member, ns, 
 
 _templates['inline_reply_class'] = \
 '''\
-    reply::checked::%(request_name)s %(method_name)s(%(protos)s) const;
-    reply::unchecked::%(request_name)s %(method_name)s_unchecked(%(protos)s) const;
+        reply::checked::%(request_name)s %(method_name)s(%(protos)s) const;
+        reply::unchecked::%(request_name)s %(method_name)s_unchecked(%(protos)s) const;
 '''
 
 def _inline_reply_class(request_name, method_name, member, ns, param):
@@ -117,8 +117,8 @@ def _inline_reply_class(request_name, method_name, member, ns, param):
 
 _templates['inline_void_class'] = \
 '''\
-    void %(method_name)s_checked(%(protos)s) const;
-    void %(method_name)s(%(protos)s) const;
+        void %(method_name)s_checked(%(protos)s) const;
+        void %(method_name)s(%(protos)s) const;
 '''
 
 def _inline_void_class(request_name, method_name, member, ns, param):

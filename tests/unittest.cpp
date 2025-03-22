@@ -16,9 +16,10 @@ TEST(XPP, CanConnect) {
 
     ASSERT_GE(conn_screen, 0);
     
-    auto root = conn->root();
+    auto root = conn->root<xpp::x::window>();
     
     auto atom = conn->intern_atom(true, 12, "MY_ATOM_NAME");
+    xpp::font::open_checked(c, "cursor");
 }
 
 #if 0

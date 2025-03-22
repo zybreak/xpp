@@ -22,8 +22,7 @@ _templates['list'] = \
     xpp::generic::list<%s_reply_t,
                        %s
                       >
-    %s(void)
-    {
+    %s() {
       return xpp::generic::list<%s_reply_t,
                                 %s
                                >(%s);
@@ -32,9 +31,7 @@ _templates['list'] = \
 
 _templates['string_accessor'] = \
 '''\
-    std::string
-    %s(void)
-    {
+    std::string %s() {
       return std::string(%s_%s(this->get().get()),
                          %s_%s_length(this->get().get()));
     }

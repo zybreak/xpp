@@ -1,2 +1,4 @@
  * Usage of reserved keywords in certain (which) extensions.
  * Duplicated case values in XINPUT event dispatcher
+ * Calling disconnect before destructor results in multiple free's
+ * Doesnt check connection after connect

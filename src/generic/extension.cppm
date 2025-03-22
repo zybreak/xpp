@@ -8,15 +8,16 @@ export namespace xpp::generic {
 
     class extension {
       public:
-        explicit extension(xcb_connection_t *c, xcb_extension_t *id) : m_c(c), id(id) {
+        explicit extension(xcb_connection_t *c, xcb_extension_t *id)
+            : m_c(c), id(id) {
             prefetch();
         }
 
-        xcb_query_extension_reply_t const & operator*() const {
+        xcb_query_extension_reply_t const &operator*() const {
             return *m_extension;
         }
 
-        xcb_query_extension_reply_t const * operator->() const {
+        xcb_query_extension_reply_t const *operator->() const {
             return m_extension;
         }
 
@@ -24,14 +25,19 @@ export namespace xpp::generic {
             return m_extension;
         }
 
-        auto get(this auto& self) -> decltype(self) {
+        auto get(this auto &self) -> decltype(self) {
             self.m_extension = xcb_get_extension_data(self.m_c, self.id);
             return self;
         }
 
-        auto prefetch(this auto& self) -> decltype(self) {
+        auto prefetch(this auto &self) -> decltype(self) {
             xcb_prefetch_extension_data(self.m_c, self.id);
             return self;
+        }
+
+      protected:
+        xcb_connection_t *get_connection() const {
+            return m_c;
         }
 
       private:

@@ -139,7 +139,7 @@ class CppError(object):
         members = []
 
         opcode_accessor = \
-            [ "static uint8_t opcode(void)"
+            [ "static uint8_t opcode()"
             , "{"
             , "  return %s;" % self.opcode_name
             , "}"
@@ -191,10 +191,10 @@ class %s : public xpp::generic::error<%s> {
 
     %s(std::shared_ptr<xcb_generic_error_t> const &error) : xpp::generic::error<%s>(error) {}
     
-    virtual ~%s(void) {}
+    virtual ~%s() {}
 
 %s
-    std::string_view description(void) const noexcept override {
+    std::string_view description() const noexcept override {
       return "%s";
     }
 %s\

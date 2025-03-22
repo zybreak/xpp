@@ -9,22 +9,10 @@ _templates = {}
 
 _templates['interface_class'] = \
 """\
-    export class interface {
-      protected:
-        virtual xcb_connection_t* get_connection() const = 0;
-
+    export class interface%(base)s {
       public:
-    %s\
-
-        virtual ~interface(void) {}
-
-    #if 0
-        const interface<Derived> & %s(void) {
-          return *this;
-        }
-    #endif
-
-    %s\
+%(methods)s\
+%(ctor)s
     }; // class interface
 """
 
@@ -59,17 +47,33 @@ class InterfaceClass(object):
             methods += request.make_object_class_inline(True, source_writer) + "\n"
 
         typedef = []
-        #if self.namespace.is_ext:
+        ctor = ""
+        base = ""
+        if self.namespace.is_ext:
             #typedef = [ "using extension = xpp::%s::extension;" % ns ]
-
-        if len(typedef) > 0:
-            typedef = "".join(["    " + s for s in typedef]) + "\n"
+            base = " : public xpp::generic::extension"
+            ctor = "\
+        explicit interface(xcb_connection_t *c) : xpp::generic::extension(c, &xcb_%(ext_name)s_id) {}" % { "ext_name": ns }
         else:
-            typedef = ""
+            ctor = """\
+      protected:  
+        explicit interface() = default;
+        virtual xcb_connection_t* get_connection() const = 0;
+            """
+
+        #if len(typedef) > 0:
+        #    typedef = "".join(["    " + s for s in typedef]) + "\n"
+        #else:
+        #    typedef = ""
 
 
-        header_writer((_templates['interface_class']
-                % (typedef, ns, methods)))
+        header_writer((_templates['interface_class'] % {
+            "typedef": typedef,
+            "methods": methods,
+            "ext_name": ns,
+            "base": base,
+            "ctor": ctor
+        }))
         
         # + \
         #'\n' + event_dispatcher_class(self.namespace, self.events) + \

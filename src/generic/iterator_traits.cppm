@@ -10,7 +10,7 @@ export namespace xpp {
 
         template<typename T>
         struct traits {
-            typedef T type;
+            using type = T;
         };
 
         template<typename Object>

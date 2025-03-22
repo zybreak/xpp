@@ -4,24 +4,6 @@ export module xpp.generic.resource;
 
 import std;
 
-#if 0
-namespace xpp::generic::detail {
-
-    template<typename ResourceId>
-    class interfaces : public Interfaces<interfaces<Derived, Resource, ResourceId, Interfaces...>>... {
-      public:
-        ResourceId const & resource(void) const {
-            return *static_cast<Derived const &>(*this);
-        }
-
-        //xpp::connection& connection(void) const {
-        //    return static_cast<Resource const &>(*this).connection();
-        //}
-    };  // class interfaces
-
-};  // namespace xpp::generic::detail
-#endif
-
 export namespace xpp {
     
     namespace generic {
@@ -33,7 +15,14 @@ export namespace xpp {
             // reference counting for Resource object
             std::shared_ptr<ResourceId> m_resource;
 
-          public:
+            xcb_connection_t* get_connection() const {
+                return m_c;
+            }
+            
+            ResourceId const & get_resource() const {
+                return *m_resource;
+            }
+
             using Create = std::function<void(xcb_connection_t*, ResourceId const &)>;
             using Destroy = std::function<void(xcb_connection_t*, ResourceId const &)>;
             resource(xcb_connection_t *c, Create create, Destroy destroy) : m_c(c) {
@@ -60,6 +49,9 @@ export namespace xpp {
             resource(resource<ResourceId> const &other)
                 : m_c(other.m_c), m_resource(other.m_resource) {
             }
+          public:
+
+            virtual ~resource(void) = default;
 
             virtual void operator=(resource<ResourceId> const &other) {
                 m_c = other.m_c;
@@ -77,14 +69,7 @@ export namespace xpp {
             virtual operator ResourceId const &() const {
                 return *m_resource;
             }
-
-            xcb_connection_t* get_connection() const {
-                return m_c;
-            }
             
-            ResourceId const & get_resource() const {
-                return *m_resource;
-            }
         };  // class resource
 
         template<typename ResourceId>

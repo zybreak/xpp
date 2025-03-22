@@ -8,7 +8,7 @@ from resource_classes import _resource_classes
 _field_accessor_template_specialization = \
 '''\
 template<>
-%s %s::%s<%s>(void) const {
+%s %s::%s<%s>() const {
   return %s;
 }\
 '''
@@ -231,14 +231,14 @@ class CppEvent(object):
         typedef = [ "using extension = xpp::%s::extension;" % ns ]
 
         description = \
-            [ "static std::string description(void)"
+            [ "static std::string description()"
             , "{"
             , "  return std::string(\"%s\");" % self.opcode_name
             , "}"
             ]
 
         opcode_accessor = \
-            [ "static uint8_t opcode(void)"
+            [ "static uint8_t opcode()"
             , "{"
             , "  return %s;" % self.opcode_name
             , "}"
@@ -259,7 +259,7 @@ class CppEvent(object):
                 ]
 
             first_event = \
-                [ "uint8_t first_event(void) {"
+                [ "uint8_t first_event() {"
                 , "  return m_first_event;"
                 , "}"
                 ]
@@ -319,7 +319,7 @@ class %s : public xpp::generic::event<%s> {
 
 %s\
 
-    virtual ~%s(void) {}
+    virtual ~%s() {}
 
 %s\
 %s\
