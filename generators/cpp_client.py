@@ -133,6 +133,9 @@ class Client(object):
         self._h('')
 
         self._h('import xpp.generic;')
+        
+        if self._ns.is_ext:
+            self._h('import xpp.connection;')
 
         self._h('')
         self._h('namespace xpp::%s {' % get_namespace(self._ns))

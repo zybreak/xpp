@@ -6,21 +6,18 @@ _templates = {}
 
 _templates['initializer'] = \
     '''\
-    using vector_type = typename value_type<%s, ! std::is_pointer<%s>::value>::type;
-    std::vector<vector_type> %s = { value_iterator<%s>(%s), value_iterator<%s>(%s) };
+    using vector_type = typename value_type<%(iter_type)s, ! std::is_pointer<%(iter_type)s>::value>::type;
     '''
+#std::vector<vector_type> %s = { value_iterator<%s>(%s), value_iterator<%s>(%s) };
 
 
 def _initializer(iter_type, c_name, iter_begin, iter_end):
-    return _templates['initializer'] % \
-        (iter_type
-         , iter_type
-         , c_name
-         , iter_type
-         , iter_begin
-         , iter_type
-         , iter_end
-         )
+    return _templates['initializer'] % {
+        "iter_type": iter_type,
+        "c_name": c_name,
+        "iter_begin": iter_begin,
+        "iter_end": iter_end
+    }
 
 
 class ParameterList(object):
@@ -70,6 +67,7 @@ class ParameterList(object):
 
     def make_wrapped(self):
         self.wrap_calls = []
+        self.pass_wrap_calls = []
         self.wrap_protos = []
         self.iter_calls = []
         self.iter_2nd_lvl_calls = []
@@ -105,6 +103,7 @@ class ParameterList(object):
                 adjust = adjust + 1
                 self.want_wrap = True
                 self.wrap_calls.pop(prev)
+                self.pass_wrap_calls.pop(prev)
                 self.wrap_protos.pop(prev)
                 self.iter_calls.pop(prev)
                 self.iter_2nd_lvl_calls.pop(prev)
@@ -125,66 +124,85 @@ class ParameterList(object):
                         list.append(Parameter(None,
                                               c_name=param.c_name + '.c_str()'))
 
+                    def append_pass_wrap_call_string(list):
+                        list.append(Parameter(None, c_name=param.c_name))
+
                     append_proto_string(self.wrap_protos)
                     append_proto_string(self.iter_protos)
                     append_call_string(self.wrap_calls)
+                    append_pass_wrap_call_string(self.pass_wrap_calls)
                     append_call_string(self.iter_calls)
                     append_call_string(self.iter_2nd_lvl_calls)
 
                 else:
                     param_type = param.c_type
-                    if param_type == "void":
+                    if param_type != "void":
+
+                        prev_type = self.parameter[prev].c_type
+
+                        ### std::vector
+                        self.wrap_protos.append(Parameter(None,
+                                                          c_type='const std::vector<' + ('void*' if param.c_type == 'void' else param.c_type) + '> &',
+                                                          c_name=param.c_name))
+
+                        self.wrap_calls.append(Parameter(None,
+                                                         c_name="static_cast<" + prev_type + ">("
+                                                                + param.c_name + '.size())'))
+
+                        self.wrap_calls.append(Parameter(None,
+                                                         c_name=param.c_name + '.data()'))
+
+                        self.pass_wrap_calls.append(Parameter(None,
+                                                         c_name=param.c_name))
+
+                    else:
+
                         param_type = "Type_" + str(index)
                         self.templates.append(param_type)
+                        ### Iterator
+                        iter_type = param.c_name.capitalize() + "_Iterator"
+                        iter_begin = param.c_name + "_begin"
+                        iter_end = param.c_name + "_end"
 
-                    prev_type = self.parameter[prev].c_type
+                        if len(self.templates) > 0:
+                            self.templates[-1] += " = typename " + iter_type + "::value_type"
+                        self.iterator_templates.append(iter_type)
 
-                    ### std::vector
-                    self.wrap_protos.append(Parameter(None,
-                                                      c_type='const std::vector<' + param_type + '> &',
-                                                      c_name=param.c_name))
+                        #self.iter_protos.append(Parameter(None,
+                        #                                  c_type=iter_type,
+                        #                                  c_name=iter_begin))
 
-                    self.wrap_calls.append(Parameter(None,
-                                                     c_name="static_cast<" + prev_type + ">("
-                                                            + param.c_name + '.size())'))
+                        #self.iter_protos.append(Parameter(None,
+                        #                                  c_type=iter_type,
+                        #                                  c_name=iter_end))
 
-                    self.wrap_calls.append(Parameter(None,
-                                                     c_name=param.c_name + '.data()'))
+                        self.iter_protos.append(Parameter(None,
+                                                          c_type=iter_type,
+                                                          c_name=param.c_name))
+                        #self.iter_calls.append(Parameter(None,
+                        #                                 c_name="static_cast<" + prev_type + ">(" + param.c_name + '.size())'))
 
-                    ### Iterator
-                    iter_type = param.c_name.capitalize() + "_Iterator"
-                    iter_begin = param.c_name + "_begin"
-                    iter_end = param.c_name + "_end"
+                        #self.iter_calls.append(Parameter(None,
+                        #                                 c_name='const_cast<const vector_type *>(' + param.c_name + '.data())'))
+                        
+                        self.iter_calls.append(Parameter(None,
+                                                         c_name="static_cast<" + prev_type + ">(" + param.c_name + '.size())'))
 
-                    if len(self.templates) > 0:
-                        self.templates[-1] += " = typename " + iter_type + "::value_type"
-                    self.iterator_templates.append(iter_type)
+                        self.iter_calls.append(Parameter(None,
+                                                         c_name='const_cast<const vector_type *>(' + param.c_name + ".data())"))
+                        
+                        self.iter_2nd_lvl_calls.append(Parameter(None,
+                                                                 c_name=iter_begin))
 
-                    self.iter_protos.append(Parameter(None,
-                                                      c_type=iter_type,
-                                                      c_name=iter_begin))
+                        self.iter_2nd_lvl_calls.append(Parameter(None,
+                                                                 c_name=iter_end))
 
-                    self.iter_protos.append(Parameter(None,
-                                                      c_type=iter_type,
-                                                      c_name=iter_end))
-
-                    self.iter_calls.append(Parameter(None,
-                                                     c_name="static_cast<" + prev_type + ">(" + param.c_name + '.size())'))
-
-                    self.iter_calls.append(Parameter(None,
-                                                     c_name='const_cast<const vector_type *>(' + param.c_name + '.data())'))
-
-                    self.iter_2nd_lvl_calls.append(Parameter(None,
-                                                             c_name=iter_begin))
-
-                    self.iter_2nd_lvl_calls.append(Parameter(None,
-                                                             c_name=iter_end))
-
-                    self.initializer.append(
-                        _initializer(iter_type, param.c_name, iter_begin, iter_end))
+                        self.initializer.append(
+                            _initializer(iter_type, param.c_name, iter_begin, iter_end))
 
             else:
                 self.wrap_calls.append(param)
+                self.pass_wrap_calls.append(param)
                 self.wrap_protos.append(param)
                 self.iter_calls.append(param)
                 self.iter_2nd_lvl_calls.append(param)
@@ -198,6 +216,9 @@ class ParameterList(object):
 
     def wrapped_calls(self, sort):
         return self.calls(sort, params=self.wrap_calls)
+
+    def pass_wrapped_calls(self, sort):
+        return self.calls(sort, params=self.pass_wrap_calls)
 
     def wrapped_protos(self, sort, defaults):
         return self.protos(sort, defaults, params=self.wrap_protos)

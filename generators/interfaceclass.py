@@ -44,7 +44,7 @@ class InterfaceClass(object):
         ns = get_namespace(self.namespace)
         methods = ""
         for request in self.requests:
-            methods += request.make_object_class_inline(True, source_writer) + "\n"
+            methods += request.make_object_class_inline(True, source_writer, pass_wrapped=True) + "\n"
 
         typedef = []
         ctor = ""
@@ -52,8 +52,10 @@ class InterfaceClass(object):
         if self.namespace.is_ext:
             #typedef = [ "using extension = xpp::%s::extension;" % ns ]
             base = " : public xpp::generic::extension"
-            ctor = "\
-        explicit interface(xcb_connection_t *c) : xpp::generic::extension(c, &xcb_%(ext_name)s_id) {}" % { "ext_name": ns }
+            ctor = """\
+        friend class xpp::connection;
+        explicit interface(xcb_connection_t *c) : xpp::generic::extension(c, &xcb_%(ext_name)s_id) {}
+        """ % { "ext_name": ns }
         else:
             ctor = """\
       protected:  

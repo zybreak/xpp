@@ -9,8 +9,10 @@ export namespace xpp::generic {
     class extension {
       public:
         explicit extension(xcb_connection_t *c, xcb_extension_t *id)
-            : m_c(c), id(id) {
-            prefetch();
+            : m_c(c), id(id), m_extension(xcb_get_extension_data(c, id)) {
+            if (m_extension->present == 0) {
+                throw std::runtime_error("extension not present");
+            }
         }
 
         xcb_query_extension_reply_t const &operator*() const {
@@ -25,11 +27,6 @@ export namespace xpp::generic {
             return m_extension;
         }
 
-        auto get(this auto &self) -> decltype(self) {
-            self.m_extension = xcb_get_extension_data(self.m_c, self.id);
-            return self;
-        }
-
         auto prefetch(this auto &self) -> decltype(self) {
             xcb_prefetch_extension_data(self.m_c, self.id);
             return self;
@@ -41,11 +38,11 @@ export namespace xpp::generic {
         }
 
       private:
-        xcb_connection_t *m_c = nullptr;
-        xcb_extension_t *id = nullptr;
+        xcb_connection_t *m_c{nullptr};
+        xcb_extension_t *id{nullptr};
         // The result must not be freed.
         // This storage is managed by the cache itself.
-        xcb_query_extension_reply_t const *m_extension = nullptr;
+        xcb_query_extension_reply_t const *m_extension{nullptr};
     };  // class extension
 
 }  // namespace xpp::generic

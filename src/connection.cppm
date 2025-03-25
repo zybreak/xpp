@@ -9,23 +9,24 @@ import xpp.generic.error;
 import xpp.generic.factory;
 import xpp.generic.extension;
 import xpp.proto.x;
-import xpp.proto.randr;
 
-export namespace xpp {
+namespace xpp {
 
-    class connection : public xpp::x::interface {
+    export class connection : public xpp::x::interface {
 
       public:
         using shared_generic_event_ptr = std::shared_ptr<xcb_generic_event_t>;
         
-        explicit connection(xcb_connection_t *c) : m_c(std::shared_ptr<xcb_connection_t>(c, [](...) {})) {}
+        explicit connection(xcb_connection_t *c) : m_c(std::shared_ptr<xcb_connection_t>(c, [](...) {})) {
+            m_root_window = screen_of_display(this->default_screen())->root;
+        }
         
         template<typename... ConnectionParameter>
-        explicit connection(xcb_connection_t *(*Connect)(ConnectionParameter...),
-                      ConnectionParameter... connection_parameter)
+        explicit connection(xcb_connection_t *(*Connect)(ConnectionParameter...), ConnectionParameter... connection_parameter)
             : m_c(std::shared_ptr<xcb_connection_t>(
                   Connect(connection_parameter...),
                   [&](xcb_connection_t *c) { xcb_disconnect(c); })) {
+            m_root_window = screen_of_display(this->default_screen())->root;
         }
 
         // xcb_connect (const char *displayname, int *screenp)
@@ -33,20 +34,14 @@ export namespace xpp {
             : connection(xcb_connect, displayname.c_str(), &m_screen) {}
 
         // xcb_connect_to_fd (int fd, xcb_auth_info_t *auth_info)
-        explicit connection(int fd, xcb_auth_info_t *auth_info)
-            : connection(xcb_connect_to_fd, fd, auth_info) {}
+        explicit connection(int fd, xcb_auth_info_t *auth_info) : connection(xcb_connect_to_fd, fd, auth_info) {}
 
         // xcb_connect_to_display_with_auth_info (
         //     const char *display, xcb_auth_info_t *auth, int *screen)
-        explicit connection(std::string const &display, xcb_auth_info_t *auth)
-            : connection(xcb_connect_to_display_with_auth_info,
-                   display.c_str(), auth, &m_screen) {}
+        explicit connection(std::string const &display, xcb_auth_info_t *auth) : connection(xcb_connect_to_display_with_auth_info, display.c_str(), auth, &m_screen) {}
         
-        template<typename... Parameters>
-        connection(Parameters &&...parameters) : connection(std::forward<Parameters>(parameters)...) {
-            m_root_window = screen_of_display(this->default_screen())->root;
-        }
-
+        virtual ~connection() = default;
+        
         void operator()(std::shared_ptr<xcb_generic_error_t> const &error) const {
             check(error);
         }
@@ -61,8 +56,9 @@ export namespace xpp {
             return make()(*this, m_root_window);
         }
 
-        xpp::randr::interface randr() const {
-            return xpp::randr::interface{*this};
+        template<typename Extension>
+        Extension extension() const {
+            return Extension{*this};
         }
         
         xcb_connection_t *operator*() const;

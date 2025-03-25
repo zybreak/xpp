@@ -42,13 +42,17 @@ _templates['reply_class'] = \
 '''
 
 def _reply_class(name, c_name, ns, cookie, accessors, param):
+    
+    protos = param.wrapped_protos(param.has_defaults, param.has_defaults) if param.want_wrap else param.protos(param.has_defaults, param.has_defaults)
+    calls = param.wrapped_calls(False) if param.want_wrap else param.calls(False)
+    
     return _templates['reply_class'] % {
         "name": name,
         "c_name": c_name,
         "make_static_getter": cookie.make_static_getter(),
         "accessors": accessors,
-        "protos": param.comma()+param.protos(param.has_defaults, param.has_defaults),
-        "calls": param.comma()+param.calls(False)
+        "protos": param.comma()+protos,
+        "calls": param.comma()+calls
     }
 
 _templates['reply_member_accessor'] = \

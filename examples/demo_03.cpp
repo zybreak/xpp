@@ -31,9 +31,15 @@ int main() {
     auto focused = i.focus<xpp::x::window>();
     std::cout << focused << std::endl;
 
+    //xpp::x::change_property(xpp, 0, focused, 0, 0, 0, "hej");
+
     for (auto child : focused.query_tree().parent<xpp::x::window>().query_tree().children()) {
         std::cout << child << std::endl;
     }
+
+    auto q_v = xpp.extension<xpp::randr::interface>().query_version(1, 1);
+
+    std::cout << q_v->major_version << q_v->minor_version << std::endl;
 
     xpp.disconnect();
     

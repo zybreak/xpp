@@ -22,13 +22,16 @@ _templates['void_request_function_impl'] = \
 '''
 
 def _void_request_function_impl(ns, name, c_name, param):
+    protos = param.wrapped_protos(param.has_defaults, param.has_defaults) if param.want_wrap else param.protos(param.has_defaults, False)
+    calls = param.wrapped_calls(False) if param.want_wrap else param.calls(False)
+    
     return _templates['void_request_function_impl'] % {
         "c_name": c_name,
         "name": name,
         "ns": ns,
         "comma": param.comma(),
-        "protos": param.protos(param.has_defaults, param.has_defaults),
-        "calls": param.calls(False)
+        "protos": protos,
+        "calls": calls
     }
 
 
@@ -39,10 +42,13 @@ _templates['void_request_function'] = \
 '''
 
 def _void_request_function(ns, name, c_name, param):
+    protos = param.wrapped_protos(param.has_defaults, param.has_defaults) if param.want_wrap else param.protos(param.has_defaults, param.has_defaults)
+    calls = param.wrapped_calls(False) if param.want_wrap else param.calls(False)
+    
     return _templates['void_request_function'] % {
         "name": name,
-        "protos": param.comma()+param.protos(param.has_defaults, param.has_defaults),
-        "calls": param.comma()+param.calls(False)
+        "protos": param.comma()+protos,
+        "calls": param.comma()+calls
     }
 
 _templates['reply_request_function'] = \
@@ -52,10 +58,12 @@ _templates['reply_request_function'] = \
 '''
 
 def _reply_request_function(name, param):
+    protos = param.wrapped_protos(param.has_defaults, param.has_defaults) if param.want_wrap else param.protos(param.has_defaults, param.has_defaults)
+    calls = param.wrapped_calls(False) if param.want_wrap else param.calls(False)
     return _templates['reply_request_function'] % {
         "name": name,
-        "protos": param.comma()+param.protos(param.has_defaults, param.has_defaults),
-        "calls": param.comma()+param.calls(False)
+        "protos": param.comma()+protos,
+        "calls": param.comma()+calls
     }
 
 _templates['reply_request_function_impl'] = \
@@ -70,10 +78,12 @@ _templates['reply_request_function_impl'] = \
 '''
 
 def _reply_request_function_impl(name, param):
+    protos = param.wrapped_protos(param.has_defaults, False) if param.want_wrap else param.protos(param.has_defaults, False)
+    calls = param.wrapped_calls(False) if param.want_wrap else param.calls(False)
     return _templates['reply_request_function_impl'] % {
         "name": name,
-        "protos": param.comma()+param.protos(param.has_defaults, False),
-        "calls": param.comma()+param.calls(False)
+        "protos": param.comma()+protos,
+        "calls": param.comma()+calls
     }
 
 _templates['inline_reply_class_impl'] = \
@@ -105,14 +115,14 @@ _templates['inline_reply_class'] = \
         reply::unchecked::%(request_name)s %(method_name)s_unchecked(%(protos)s) const;
 '''
 
-def _inline_reply_class(request_name, method_name, member, ns, param):
+def _inline_reply_class(request_name, method_name, member, ns, protos, calls):
     return _templates['inline_reply_class'] % {
             "member": member,
             "method_name": method_name,
             "ns": ns,
             "request_name": request_name,
-            "protos": param.protos(param.has_defaults, param.has_defaults),
-            "calls": param.comma()+param.calls(False)
+            "protos": protos,
+            "calls": calls
         }
 
 _templates['inline_void_class'] = \
@@ -121,14 +131,14 @@ _templates['inline_void_class'] = \
         void %(method_name)s(%(protos)s) const;
 '''
 
-def _inline_void_class(request_name, method_name, member, ns, param):
+def _inline_void_class(request_name, method_name, member, ns, protos, calls):
     return _templates['inline_void_class'] % {
         "method_name": method_name,
         "ns": ns,
         "request_name": request_name,
         "member": member,
-        "protos": param.protos(param.has_defaults, param.has_defaults),
-        "calls": param.comma()+param.calls(False)
+        "protos": protos,
+        "calls": calls
     }
 
 _templates['inline_void_class_impl'] = \
@@ -205,7 +215,7 @@ class CppRequest(object):
             header_writer(_reply_request_function(self.request_name, self.parameter_list))
             source_writer(_reply_request_function_impl(self.request_name, self.parameter_list))
 
-    def make_object_class_inline(self, is_connection, source_writer, class_name=""):
+    def make_object_class_inline(self, is_connection, source_writer, class_name="", pass_wrapped = True):
         member = ""
         method_name = self.name
         if not is_connection:
@@ -215,9 +225,26 @@ class CppRequest(object):
         if class_name == "":
             class_name = "interface"
 
-        if self.is_void:
-            source_writer(_inline_void_class_impl(class_name, self.request_name, method_name, member, get_namespace(self.namespace), self.parameter_list.protos(self.parameter_list.has_defaults, False), self.parameter_list.comma()+self.parameter_list.calls(False)))
-            return _inline_void_class(self.request_name, method_name, member, get_namespace(self.namespace), self.parameter_list)
+        source_protos = self.parameter_list.wrapped_protos(self.parameter_list.has_defaults, False) if self.parameter_list.want_wrap else self.parameter_list.protos(self.parameter_list.has_defaults, False)
+        protos = self.parameter_list.wrapped_protos(self.parameter_list.has_defaults, self.parameter_list.has_defaults) if self.parameter_list.want_wrap else self.parameter_list.protos(self.parameter_list.has_defaults, self.parameter_list.has_defaults)
+
+        if len(self.parameter_list.iterator_templates) == 0:
+            if pass_wrapped and self.parameter_list.want_wrap:
+                calls = self.parameter_list.pass_wrapped_calls(False)
+            else:
+                calls = self.parameter_list.wrapped_calls(False) if self.parameter_list.want_wrap else self.parameter_list.calls(False)
         else:
-            source_writer(_inline_reply_class_impl(class_name, self.request_name, method_name, member, get_namespace(self.namespace), self.parameter_list.protos(self.parameter_list.has_defaults, False), self.parameter_list.comma()+self.parameter_list.calls(False)))
-            return _inline_reply_class(self.request_name, method_name, member, get_namespace(self.namespace), self.parameter_list)
+            calls = self.parameter_list.iterator_calls(False) if self.parameter_list.want_wrap else self.parameter_list.calls(False)
+
+        if self.is_void:
+            if len(self.parameter_list.iterator_templates) == 0:
+                source_writer(_inline_void_class_impl(class_name, self.request_name, method_name, member, get_namespace(self.namespace), source_protos, self.parameter_list.comma()+calls))
+                return _inline_void_class(self.request_name, method_name, member, get_namespace(self.namespace), protos, self.parameter_list.comma()+calls)
+            else:
+                return "// ignored %s for now" % method_name
+        else:
+            if len(self.parameter_list.iterator_templates) == 0:
+                source_writer(_inline_reply_class_impl(class_name, self.request_name, method_name, member, get_namespace(self.namespace), source_protos, self.parameter_list.comma()+calls))
+                return _inline_reply_class(self.request_name, method_name, member, get_namespace(self.namespace), protos, self.parameter_list.comma()+calls)
+            else:
+                return "// ignored %s for now" % method_name

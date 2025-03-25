@@ -86,10 +86,16 @@ class CppCookie(object):
         return self.parameter_list.comma()
 
     def calls(self, sort):
-        return self.parameter_list.calls(sort)
+        if self.parameter_list.want_wrap:
+            return self.parameter_list.wrapped_calls(sort)
+        else:
+            return self.parameter_list.calls(sort)
 
     def protos(self, sort, defaults):
-        return self.parameter_list.protos(sort, defaults)
+        if self.parameter_list.want_wrap:
+            return self.parameter_list.wrapped_protos(sort, defaults)
+        else:
+            return self.parameter_list.protos(sort, defaults)
 
     def iterator_template(self, indent="    ", tail="\n"):
         prefix = "template<typename "
@@ -165,37 +171,20 @@ class CppCookie(object):
 
 
     def make_static_getter(self):
-        default = ""
-
-        if self.parameter_list.has_defaults:
-            default = self.static_reply_methods(self.protos(True, True), self.calls(False))
-        else:
-            default = self.static_reply_methods(self.protos(False, False), self.calls(False))
-
-        wrapped = ""
-        if self.parameter_list.want_wrap:
-            wrapped = \
-                self.static_reply_methods(self.iterator_protos(True, True),
-                        self.iterator_calls(False), self.iterator_template(),
-                        self.iterator_initializers())
-
-        default_args = ""
-        if self.parameter_list.is_reordered():
-            default_args = \
-                self.static_reply_methods(self.protos(True, True), self.calls(False))
-
         result = ""
 
         if (self.parameter_list.has_defaults
             or self.parameter_list.is_reordered()
             or self.parameter_list.want_wrap):
-            result += default
+            result += self.static_reply_methods(self.protos(self.parameter_list.has_defaults, self.parameter_list.has_defaults), self.calls(False))
 
         if self.parameter_list.is_reordered():
-            result += "\n" + default_args
+            result += "\n" + self.static_reply_methods(self.protos(True, True), self.calls(False))
 
-        if self.parameter_list.want_wrap:
-            result += "\n" + wrapped
+        if len(self.parameter_list.iterator_templates) > 0:
+            result += "\n" +  self.static_reply_methods(self.iterator_protos(True, True),
+                                                        self.iterator_calls(False), self.iterator_template(),
+                                                        self.iterator_initializers())
 
         return result
 
@@ -203,14 +192,10 @@ class CppCookie(object):
         
         result = ""
 
-        if self.parameter_list.has_defaults or self.parameter_list.is_reordered() or self.parameter_list.want_wrap:
+        if (self.parameter_list.has_defaults or self.parameter_list.is_reordered() or self.parameter_list.want_wrap) and not len(self.parameter_list.iterator_templates) > 0:
 
             result += "// has_defaults\n"
-            if self.parameter_list.has_defaults:
-                result += self.void_functions(self.protos(True, True), self.calls(False))
-            else:
-                result += self.void_functions(self.protos(False, False), self.calls(False))
-                
+            result += self.void_functions(self.protos(self.parameter_list.has_defaults, self.parameter_list.has_defaults), self.calls(False))
             source_writer(self.void_function_impls(self.protos(self.parameter_list.has_defaults, False), self.calls(False)))
         
         if self.parameter_list.is_reordered():
@@ -218,9 +203,9 @@ class CppCookie(object):
             result += self.void_functions(self.protos(True, True), self.calls(False))
             source_writer(self.void_function_impls(self.protos(True, False), self.calls(False)))
         
-        if self.parameter_list.want_wrap:
+        if len(self.parameter_list.iterator_templates) > 0:
             result += "\n// want_wrap\n"
-            result += self.void_function_impls(self.iterator_protos(True, True),
+            result += self.void_function_impls(self.iterator_protos(True, False),
                                 self.iterator_calls(False),
                                 self.iterator_template(indent=""),
                                 self.iterator_initializers(),
