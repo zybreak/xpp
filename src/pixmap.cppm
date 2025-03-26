@@ -4,6 +4,7 @@ export module xpp.pixmap;
 
 import std;
 import xpp.generic.resource;
+import xpp.generic.request;
 import xpp.generic.iterator_traits;
 import xpp.proto.x;
 
@@ -27,10 +28,10 @@ export namespace xpp {
             return pixmap(
                 c,
                 [&](xcb_connection_t *c, xcb_pixmap_t const& pixmap) {
-                xpp::x::create_pixmap(c, depth, pixmap, drawable, width, height);
+                xcb_create_pixmap(c, depth, pixmap, drawable, width, height);
             },
                 [&](xcb_connection_t *c, xcb_pixmap_t const& pixmap) {
-                xpp::x::free_pixmap(c, pixmap);
+                xcb_free_pixmap(c, pixmap);
             });
         }
 
@@ -40,10 +41,10 @@ export namespace xpp {
             return pixmap(
                 c,
                 [&](xcb_connection_t *c, xcb_pixmap_t const& pixmap) {
-                xpp::x::create_pixmap_checked(c, depth, pixmap, drawable, width, height);
+                xpp::generic::check(c, xcb_create_pixmap_checked(c, depth, pixmap, drawable, width, height));
             },
                 [&](xcb_connection_t *c, xcb_pixmap_t const& pixmap) {
-                xpp::x::free_pixmap_checked(c, pixmap);
+                xpp::generic::check(c, xcb_free_pixmap_checked(c, pixmap));
             });
         }
     };

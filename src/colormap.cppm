@@ -4,6 +4,7 @@ export module xpp.colormap;
 
 import std;
 import xpp.generic.resource;
+import xpp.generic.request;
 import xpp.generic.iterator_traits;
 import xpp.proto.x;
 
@@ -24,10 +25,10 @@ export namespace xpp {
             return colormap(
                 c,
                 [&](xcb_connection_t *c, xcb_colormap_t const& colormap) {
-                xpp::x::create_colormap(c, alloc, colormap, window, visual);
+                xcb_create_colormap_checked(c, alloc, colormap, window, visual);
             },
                 [&](xcb_connection_t *c, xcb_colormap_t const& colormap) {
-                xpp::x::free_colormap(c, colormap);
+                xcb_free_colormap(c, colormap);
             });
         }
 
@@ -36,10 +37,10 @@ export namespace xpp {
             return colormap(
                 c,
                 [&](xcb_connection_t *c, xcb_colormap_t const& colormap) {
-                xpp::x::create_colormap_checked(c, alloc, colormap, window, visual);
+                xpp::generic::check(c, xcb_create_colormap_checked(c, alloc, colormap, window, visual));
             },
                 [&](xcb_connection_t *c, xcb_colormap_t const& colormap) {
-                xpp::x::free_colormap_checked(c, colormap);
+                xpp::generic::check(c, xcb_free_colormap_checked(c, colormap));
             });
         }
     };

@@ -89,18 +89,19 @@ def _reply_request_function_impl(name, param):
 _templates['inline_reply_class_impl'] = \
 '''\
     reply::checked::%(request_name)s %(class_name)s::%(method_name)s(%(protos)s) const {
-      return xpp::%(ns)s::%(request_name)s(get_connection()%(member)s%(calls)s);
+      return reply::checked::%(request_name)s(get_connection()%(member)s%(calls)s);
     }
 
     reply::unchecked::%(request_name)s %(class_name)s::%(method_name)s_unchecked(%(protos)s) const {
-      return xpp::%(ns)s::%(request_name)s_unchecked(get_connection()%(member)s%(calls)s);
+      return reply::unchecked::%(request_name)s(get_connection()%(member)s%(calls)s);
     }
 '''
 
-def _inline_reply_class_impl(class_name, request_name, method_name, member, ns, protos, calls):
+def _inline_reply_class_impl(c_name, class_name, request_name, method_name, member, ns, protos, calls):
     return _templates['inline_reply_class_impl'] % {
         "class_name": class_name,
         "member": member,
+        "c_name": c_name,
         "method_name": method_name,
         "ns": ns,
         "request_name": request_name,
@@ -144,17 +145,18 @@ def _inline_void_class(request_name, method_name, member, ns, protos, calls):
 _templates['inline_void_class_impl'] = \
     '''\
     void %(class_name)s::%(method_name)s_checked(%(protos)s) const {
-      xpp::%(ns)s::%(request_name)s_checked(get_connection()%(member)s%(calls)s);
+      xpp::generic::check(get_connection(), %(c_name)s_checked(get_connection()%(member)s%(calls)s));
     }
 
     void %(class_name)s::%(method_name)s(%(protos)s) const {
-      xpp::%(ns)s::%(request_name)s(get_connection()%(member)s%(calls)s);
+      %(c_name)s(get_connection()%(member)s%(calls)s);
     }
     '''
 
-def _inline_void_class_impl(class_name, request_name, method_name, member, ns, protos, calls):
+def _inline_void_class_impl(c_name, class_name, request_name, method_name, member, ns, protos, calls):
     return _templates['inline_void_class_impl'] % {
         "class_name": class_name,
+        "c_name": c_name,
         "method_name": method_name,
         "ns": ns,
         "request_name": request_name,
@@ -203,19 +205,20 @@ class CppRequest(object):
         cppcookie = CppCookie(self.namespace, self.is_void, self.request.name, self.reply, self.parameter_list)
 
         if self.is_void:
-            void_functions = cppcookie.make_void_functions(header_writer, source_writer)
-            if len(void_functions) == 0:
-                header_writer(_void_request_function(get_namespace(self.namespace), self.request_name, self.c_name, self.parameter_list))
-                source_writer(_void_request_function_impl(get_namespace(self.namespace), self.request_name, self.c_name, self.parameter_list))
+            None
+        #    void_functions = cppcookie.make_void_functions(header_writer, source_writer)
+        #    if len(void_functions) == 0:
+        #        header_writer(_void_request_function(get_namespace(self.namespace), self.request_name, self.c_name, self.parameter_list))
+        #        source_writer(_void_request_function_impl(get_namespace(self.namespace), self.request_name, self.c_name, self.parameter_list))
 
         else:
             cppreply = CppReply(self.namespace, self.request.name, cppcookie, self.reply, self.accessors, self.parameter_list)
             cppreply.make(header_writer, source_writer)
             header_writer("\n")
-            header_writer(_reply_request_function(self.request_name, self.parameter_list))
-            source_writer(_reply_request_function_impl(self.request_name, self.parameter_list))
+            #header_writer(_reply_request_function(self.request_name, self.parameter_list))
+            #source_writer(_reply_request_function_impl(self.request_name, self.parameter_list))
 
-    def make_object_class_inline(self, is_connection, source_writer, class_name="", pass_wrapped = True):
+    def make_object_class_inline(self, is_connection, source_writer, class_name="", pass_wrapped = False):
         member = ""
         method_name = self.name
         if not is_connection:
@@ -238,13 +241,13 @@ class CppRequest(object):
 
         if self.is_void:
             if len(self.parameter_list.iterator_templates) == 0:
-                source_writer(_inline_void_class_impl(class_name, self.request_name, method_name, member, get_namespace(self.namespace), source_protos, self.parameter_list.comma()+calls))
+                source_writer(_inline_void_class_impl(self.c_name, class_name, self.request_name, method_name, member, get_namespace(self.namespace), source_protos, self.parameter_list.comma()+calls))
                 return _inline_void_class(self.request_name, method_name, member, get_namespace(self.namespace), protos, self.parameter_list.comma()+calls)
             else:
                 return "// ignored %s for now" % method_name
         else:
             if len(self.parameter_list.iterator_templates) == 0:
-                source_writer(_inline_reply_class_impl(class_name, self.request_name, method_name, member, get_namespace(self.namespace), source_protos, self.parameter_list.comma()+calls))
+                source_writer(_inline_reply_class_impl(self.c_name, class_name, self.request_name, method_name, member, get_namespace(self.namespace), source_protos, self.parameter_list.comma()+calls))
                 return _inline_reply_class(self.request_name, method_name, member, get_namespace(self.namespace), protos, self.parameter_list.comma()+calls)
             else:
                 return "// ignored %s for now" % method_name

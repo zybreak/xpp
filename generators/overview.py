@@ -65,8 +65,14 @@ def union(xtype: Union, name: tuple[str]):
 
 def request(xtype: Request, name: tuple[str]):
     c_type_setup(_module.namespace, xtype, name, ('request',))
+    
+    def arguments(fields: list[Field]):
+        [print("    (%s) \"%s\": %s" % (str(f.type), f.field_name, Type.type_name_to_str(f.field_type))) for f in fields if f.visible]
+        
 
-    print("Request ->       %s \"%s\" ( %s )" % ("_".join(xtype.reply.name) if xtype.reply else "void" , Type.type_name_to_str(xtype.name), ", ".join(list(map(lambda f: "%s \"%s\"" % ("_".join(f.field_type), f.field_name), xtype.fields)))))
+    print("Request ->       %s \"%s\" {" % ("_".join(xtype.reply.name) if xtype.reply else "void", Type.type_name_to_str(xtype.name)))
+    arguments(xtype.fields)
+    print("}")
 
     if xtype.reply:
         c_type_setup(_module.namespace, xtype.reply, name, ('reply',))
@@ -76,15 +82,11 @@ def request(xtype: Request, name: tuple[str]):
 
         print("Reply <-     %s {" % "_".join(xtype.reply.name))
         # Reply accessors
-        for (accessor) in c_accessors(_module.namespace, xtype.reply, name + ('reply',), name):
-            print("     %s %s" % (accessor.return_type, accessor.member))
+        arguments(xtype.reply.fields)
+        #for (accessor) in c_accessors(_module.namespace, xtype.reply, name + ('reply',), name):
+        #    print("     %s %s" % (accessor.return_type, accessor.member))
         print("}")
 
-    else:
-        # Request prototypes
-        #self._cpp_request_helper(xtype, name, True)
-        print("Reply void")
-        
 def event(xtype: Event, name: tuple[str]):
     c_type_setup(_module.namespace, xtype, name, ('event',))
     print("Event ->         typeName: %s,\t\t\t name: \"%s\"" % (Type.type_name_to_str(xtype.name), "_".join(name)))

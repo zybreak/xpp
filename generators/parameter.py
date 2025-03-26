@@ -240,7 +240,7 @@ _default_parameter_values = \
 class Parameter(object):
     def __init__(self, field, c_type="", c_name="", verbose=False):
         self.field = field
-        if field != None:
+        if field is not None:
             self.c_type = field.c_field_type
             self.c_name = field.c_field_name
             self.is_const = field.c_field_const_type == "const " + field.c_field_type

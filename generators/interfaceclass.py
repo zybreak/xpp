@@ -44,7 +44,7 @@ class InterfaceClass(object):
         ns = get_namespace(self.namespace)
         methods = ""
         for request in self.requests:
-            methods += request.make_object_class_inline(True, source_writer, pass_wrapped=True) + "\n"
+            methods += request.make_object_class_inline(True, source_writer, pass_wrapped=False) + "\n"
 
         typedef = []
         ctor = ""

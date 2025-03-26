@@ -4,6 +4,7 @@ export module xpp.cursor;
 
 import std;
 import xpp.generic.resource;
+import xpp.generic.request;
 import xpp.generic.iterator_traits;
 import xpp.proto.x;
 
@@ -27,14 +28,14 @@ export namespace xpp {
             return cursor(
                 c,
                 [&](xcb_connection_t *c, xcb_cursor_t const& cursor) {
-                xpp::x::create_cursor(c, cursor,
+                xcb_create_cursor(c, cursor,
                                       source, mask,
                                       fore_red, fore_green, fore_blue,
                                       back_red, back_green, back_blue,
                                       x, y);
             },
                 [&](xcb_connection_t *c, xcb_cursor_t const& cursor) {
-                xpp::x::free_cursor(c, cursor);
+                xcb_free_cursor(c, cursor);
             });
         }
 
@@ -47,14 +48,14 @@ export namespace xpp {
             return cursor(
                 c,
                 [&](xcb_connection_t *c, xcb_cursor_t const& cursor) {
-                xpp::x::create_cursor_checked(c, cursor,
+                xpp::generic::check(c, xcb_create_cursor_checked(c, cursor,
                                               source, mask,
                                               fore_red, fore_green, fore_blue,
                                               back_red, back_green, back_blue,
-                                              x, y);
+                                              x, y));
             },
                 [&](xcb_connection_t *c, xcb_cursor_t const& cursor) {
-                xpp::x::free_cursor_checked(c, cursor);
+                xpp::generic::check(c, xcb_free_cursor_checked(c, cursor));
             });
         }
 
@@ -67,14 +68,14 @@ export namespace xpp {
             return cursor(
                 c,
                 [&](xcb_connection_t *c, xcb_cursor_t const& cursor) {
-                xpp::x::create_glyph_cursor(c, cursor,
+                xpp::generic::check(c, xcb_create_glyph_cursor(c, cursor,
                                             source_font, mask_font,
                                             source_char, mask_char,
                                             fore_red, fore_green, fore_blue,
-                                            back_red, back_green, back_blue);
+                                            back_red, back_green, back_blue));
             },
                 [](xcb_connection_t *c, xcb_cursor_t const& cursor) {
-                xpp::x::free_cursor(c, cursor);
+                xpp::generic::check(c, xcb_free_cursor(c, cursor));
             });
         }
 
@@ -87,14 +88,14 @@ export namespace xpp {
             return cursor(
                 c,
                 [&](xcb_connection_t *c, xcb_cursor_t const& cursor) {
-                xpp::x::create_glyph_cursor_checked(c, cursor,
+                xpp::generic::check(c, xcb_create_glyph_cursor_checked(c, cursor,
                                                     source_font, mask_font,
                                                     source_char, mask_char,
                                                     fore_red, fore_green, fore_blue,
-                                                    back_red, back_green, back_blue);
+                                                    back_red, back_green, back_blue));
             },
                 [](xcb_connection_t *c, xcb_cursor_t const& cursor) {
-                xpp::x::free_cursor_checked(c, cursor);
+                xpp::generic::check(c, xcb_free_cursor_checked(c, cursor));
             });
         }
     };

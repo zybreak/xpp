@@ -4,6 +4,7 @@ export module xpp.window;
 
 import std;
 import xpp.generic.resource;
+import xpp.generic.request;
 import xpp.generic.iterator_traits;
 import xpp.proto.x;
 
@@ -30,13 +31,13 @@ export namespace xpp {
             return window(
                 c,
                 [&](xcb_connection_t *c, xcb_window_t const& window) {
-                xpp::x::create_window(c, depth, window, parent,
+                xcb_create_window(c, depth, window, parent,
                                       x, y, width, height, border_width,
                                       _class, visual,
                                       value_mask, value_list);
             },
                 [&](xcb_connection_t *c, xcb_window_t const& window) {
-                xpp::x::destroy_window(c, window);
+                xcb_destroy_window(c, window);
             });
         }
 
@@ -49,13 +50,13 @@ export namespace xpp {
             return window(
                 c,
                 [&](xcb_connection_t *c, xcb_window_t const& window) {
-                xpp::x::create_window_checked(c, depth, window, parent,
+                xpp::generic::check(c, xcb_create_window_checked(c, depth, window, parent,
                                               x, y, width, height, border_width,
                                               _class, visual,
-                                              value_mask, value_list);
+                                              value_mask, value_list));
             },
                 [&](xcb_connection_t *c, xcb_window_t const& window) {
-                xpp::x::destroy_window_checked(c, window);
+                xpp::generic::check(c, xcb_destroy_window_checked(c, window));
             });
         }
     };
