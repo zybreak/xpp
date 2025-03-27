@@ -20,5 +20,5 @@ target_link_libraries(iterator PRIVATE xpp)
 # Unit tests
 add_executable(UnitTest)
 target_sources(UnitTest PRIVATE unittest.cpp)
-target_link_libraries(UnitTest PRIVATE xpp GTest::gtest_main GTest::gmock)
+target_link_libraries(UnitTest PRIVATE xpp GTest::gmock)
 gtest_discover_tests(UnitTest)
