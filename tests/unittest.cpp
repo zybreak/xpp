@@ -6,6 +6,21 @@ import std;
 import xpp;
 import xpp.proto.randr;
 
+std::atomic<bool> xvfb_ready = false;  // Flag to indicate Xvfb is ready
+
+void handle_signal(int signum, int sa_flags, void (*handler)(int)) {
+    // Set up signal handler
+    struct sigaction sa{};
+    sa.sa_handler = handler;
+    sigemptyset(&sa.sa_mask);
+    sa.sa_flags = sa_flags;
+
+    if (sigaction(signum, &sa, nullptr) == -1) {
+        std::cerr << "Failed to set signal handler: " << strerror(errno) << '\n';
+        std::terminate();
+    }
+}
+
 class XvfbServer {
   public:
     XvfbServer() {
@@ -13,9 +28,18 @@ class XvfbServer {
     }
 
     ~XvfbServer() {
-        if (!display.empty()) {
-            std::cout << std::format("Stopping Xvfb on display {}\n", display);
-            std::system("pkill Xvfb");
+        if (child_pid > 0) {
+            std::cout << "Stopping Xvfb on display " << display << std::endl;
+            if (kill(child_pid, SIGTERM) == 0) {
+                std::cout << "Process " << child_pid << " stopped gracefully." << std::endl;
+            } else {
+                if (kill(child_pid, SIGKILL) == 0) {
+                    std::cout << "Process " << child_pid << " killed forcefully." << std::endl;
+                } else {
+                    perror("Failed to stop process");
+                    std::terminate();
+                }
+            }
         }
     }
 
@@ -25,53 +49,85 @@ class XvfbServer {
     }
 
   private:
-    std::string display{":99"};
+    std::string display;
+    pid_t child_pid{-1};
 
     void start() {
+        int pipefd[2];
+
+        handle_signal(SIGUSR1, 0, SIG_IGN);
+
+        if (pipe(pipefd) == -1) {
+            perror("pipe failed");
+            std::terminate();
+        }
+
+        pid_t pid = fork();
+        if (pid == -1) {
+            perror("fork failed");
+            std::terminate();
+        }
+
+        if (pid == 0) {
+            close(pipefd[0]);  // Close read end
+
+            auto displayFd = std::format("{}", pipefd[1]);
+            execlp("Xvfb", "Xvfb", "-displayfd", displayFd.c_str(), "-screen", "0", "1024x768x24", "-nolisten", "tcp", nullptr);
+
+            perror("Failed to start Xvfb");
+            std::terminate();
+        }
+
+        handle_signal(SIGUSR1, 0, [](int signum) {
+            xvfb_ready = true;
+            handle_signal(SIGUSR1, 0, SIG_IGN);
+        });
+
+        std::cout << "Waiting for Xvfb (ignore any SocketCreateListener failed errors below)" << std::endl;
+        child_pid = pid;
+        close(pipefd[1]);  // Close write end
         std::array<char, 16> buffer{};
-        if (std::system(std::format("Xvfb {} -screen 0 1024x768x24 &", display).c_str()) != 0) {
-            std::cerr << "Failed to start Xvfb\n";
-            std::exit(EXIT_FAILURE);
-        }
-        std::this_thread::sleep_for(std::chrono::seconds(2));
-#if 0
-        auto pipe = popen("Xvfb -displayfd 1 -screen 0 1024x768x24 2>/dev/null", "r");
-        if (!pipe) {
-            throw std::runtime_error("Failed to start Xvfb");
+        ssize_t n = read(pipefd[0], buffer.data() + 1, buffer.size() - 2);
+        close(pipefd[0]);
+
+        if (n <= 0) {
+            std::cerr << "Failed to read display number from Xvfb\n";
+            std::terminate();
         }
 
-        if (fgets(buffer.data(), buffer.size(), pipe) != nullptr) {
-            display = std::format(":{}", std::string(buffer.data()).substr(0, std::string(buffer.data()).find('\n')));
-            setenv("DISPLAY", display.c_str(), /*overwrite=*/1);
-            std::cout << std::format("Xvfb started on display {}\n", display);
-        } else {
-            throw std::runtime_error("Failed to read display number from Xvfb");
-        }
+        buffer[0] = ':';
 
-        pclose(pipe);
-#endif
+        display = std::string(buffer.data(), n);
+        std::cout << std::format("Xvfb started on display {}", display) << std::endl;
     }
 };
 
-class Environment : public testing::Environment {
+class Environment : public ::testing::Environment {
   public:
     ~Environment() override = default;
 
     // Override this to define how to set up the environment.
     void SetUp() override {
-
+        std::cout << "Environment setUp" << std::endl;
+        server = std::make_unique<XvfbServer>();
         // Set DISPLAY environment variable so tests can connect to Xvfb
-        setenv("DISPLAY", server.getDisplay().c_str(), 1);
+        setenv("DISPLAY", server->getDisplay().c_str(), 1);
     }
 
     // Override this to define how to tear down the environment.
     void TearDown() override {
+        std::cout << "Environment tearDown" << std::endl;
+        server.reset();
     }
 
-    XvfbServer server{};
+  protected:
+    std::unique_ptr<XvfbServer> server{nullptr};
 };
 
-class XPPTest : public testing::Test {
+class XPPTest : public ::testing::Test {
+  public:
+    ~XPPTest() override = default;
+
   protected:
     static void SetUpTestSuite() {
         std::cout << "before all" << std::endl;
@@ -82,13 +138,15 @@ class XPPTest : public testing::Test {
     }
 
     void SetUp() override {
-        std::cout << "before" << std::endl;
+        std::cout << "before each" << std::endl;
     }
 
     void TearDown() override {
-        std::cout << "after" << std::endl;
+        std::cout << "after each" << std::endl;
     }
 };
+
+auto env = new Environment{};
 
 TEST_F(XPPTest, CanConnect) {
     auto conn = xpp::connection{};
@@ -152,12 +210,37 @@ TEST_F(XPPTest, ExtensionPresent) {
     ASSERT_TRUE(randr_ext->present);
 }
 
-int main(int argc, char *argv[]) {
-    testing::InitGoogleTest(&argc, argv);
+TEST_F(XPPTest, CreateWindow) {
+    auto conn = xpp::connection{};
 
-    // Register the Xephyr environment
-    Environment *env = new Environment{};
-    testing::AddGlobalTestEnvironment(env);
+    uint32_t wid = conn.generate_id();
+    ASSERT_NO_THROW({
+        conn.create_window_checked(XCB_COPY_FROM_PARENT, wid, conn.root(), 0, 0, 10, 10, 1, XCB_WINDOW_CLASS_INPUT_OUTPUT, conn.screen_of_display(conn.default_screen())->root_visual, 0, nullptr);
+    });
+
+    conn.map_window(wid);
+
+    conn.flush();
+
+    auto query = conn.query_tree(conn.root());
+    auto children = query.children();
+
+    EXPECT_EQ(std::distance(children.begin(), children.end()), query->children_len);
+    EXPECT_EQ(query->children_len, 1);
+
+    auto first = *children.begin();
+
+    EXPECT_EQ(first, wid);
+}
+
+int main(int argc, char *argv[]) {
+    ::testing::InitGoogleTest(&argc, argv);
+
+    ::testing::AddGlobalTestEnvironment(env);
+
+    handle_signal(SIGSEGV, SA_NODEFER | SA_RESETHAND, [](int) {
+        env->TearDown();
+    });
 
     return RUN_ALL_TESTS();
 }
