@@ -86,6 +86,7 @@ class XvfbServer {
         std::cout << "Waiting for Xvfb (ignore any SocketCreateListener failed errors below)" << std::endl;
         child_pid = pid;
         close(pipefd[1]);  // Close write end
+        
         std::array<char, 16> buffer{};
         ssize_t n = read(pipefd[0], buffer.data() + 1, buffer.size() - 2);
         close(pipefd[0]);
@@ -104,20 +105,10 @@ class XvfbServer {
 
 class Environment : public ::testing::Environment {
   public:
-    ~Environment() override = default;
 
-    // Override this to define how to set up the environment.
-    void SetUp() override {
-        std::cout << "Environment setUp" << std::endl;
-        server = std::make_unique<XvfbServer>();
+    Environment() : server{std::make_unique<XvfbServer>()} {
         // Set DISPLAY environment variable so tests can connect to Xvfb
         setenv("DISPLAY", server->getDisplay().c_str(), 1);
-    }
-
-    // Override this to define how to tear down the environment.
-    void TearDown() override {
-        std::cout << "Environment tearDown" << std::endl;
-        server.reset();
     }
 
   protected:
@@ -125,25 +116,6 @@ class Environment : public ::testing::Environment {
 };
 
 class XPPTest : public ::testing::Test {
-  public:
-    ~XPPTest() override = default;
-
-  protected:
-    static void SetUpTestSuite() {
-        std::cout << "before all" << std::endl;
-    }
-
-    static void TearDownTestSuite() {
-        std::cout << "after all" << std::endl;
-    }
-
-    void SetUp() override {
-        std::cout << "before each" << std::endl;
-    }
-
-    void TearDown() override {
-        std::cout << "after each" << std::endl;
-    }
 };
 
 auto env = new Environment{};
